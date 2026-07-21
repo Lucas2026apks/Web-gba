@@ -86,7 +86,7 @@ onAuthStateChanged(auth, (user) => {
 });
 
 // ==========================================
-// SECCIÓN DEL EMULADOR GBA (EmulatorJS LOCAL)
+// SECCIÓN DEL EMULADOR GBA (CON MULTIJUGADOR NETPLAY)
 // ==========================================
 
 romInput.addEventListener("change", (evento) => {
@@ -97,7 +97,7 @@ romInput.addEventListener("change", (evento) => {
   }
 });
 
-// Función central para arrancar EmulatorJS con cualquier URL de ROM
+// Función central para arrancar EmulatorJS con multijugador activado
 function iniciarEmulador(urlJuego) {
   document.getElementById("game").innerHTML = "";
 
@@ -105,6 +105,9 @@ function iniciarEmulador(urlJuego) {
   window.EJS_core = "gba";
   window.EJS_gameUrl = urlJuego;
   window.EJS_pathtodata = "https://raw.githack.com/EmulatorJS/EmulatorJS/main/data/";
+  
+  // Activar opciones de multijugador en red globalmente
+  window.EJS_netplay = true;
 
   const script = document.createElement("script");
   script.src = "https://raw.githack.com/EmulatorJS/EmulatorJS/main/data/loader.js";
