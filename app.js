@@ -68,13 +68,17 @@ onAuthStateChanged(auth, (user) => {
   if (user) {
     authSection.classList.add("hidden");
     gameSection.classList.remove("hidden");
-    storeSection.classList.remove("hidden"); // Mostrar la tienda al iniciar sesión
+    storeSection.classList.remove("hidden");
     emulatorWrapper.classList.remove("hidden");
     userEmailDisplay.innerText = user.email;
+    
+    // Escanear automáticamente los juegos de GitHub al iniciar sesión
+    cargarJuegosAutomaticos();
+    
   } else {
     authSection.classList.remove("hidden");
     gameSection.classList.add("hidden");
-    storeSection.classList.add("hidden"); // Ocultar la tienda al salir
+    storeSection.classList.add("hidden");
     emulatorWrapper.classList.add("hidden");
     emailInput.value = "";
     passwordInput.value = "";
@@ -93,19 +97,6 @@ romInput.addEventListener("change", (evento) => {
   }
 });
 
-// ==========================================
-// SECCIÓN DE LA TIENDA (GITHUB / JSDELIVR)
-// ==========================================
-
-document.querySelectorAll(".btn-play-rom").forEach(button => {
-  button.addEventListener("click", (e) => {
-    const romUrl = e.target.getAttribute("data-rom-url");
-    if (romUrl) {
-      iniciarEmulador(romUrl);
-    }
-  });
-});
-
 // Función central para arrancar EmulatorJS con cualquier URL de ROM
 function iniciarEmulador(urlJuego) {
   document.getElementById("game").innerHTML = "";
@@ -118,6 +109,65 @@ function iniciarEmulador(urlJuego) {
   const script = document.createElement("script");
   script.src = "https://raw.githack.com/EmulatorJS/EmulatorJS/main/data/loader.js";
   document.body.appendChild(script);
+}
+
+// ==========================================
+// TIENDA AUTOMÁTICA (GITHUB / JSDELIVR)
+// ==========================================
+
+async function cargarJuegosAutomaticos() {
+  const repoOwner = "Lucas2026apks"; // Tu usuario de GitHub
+  const repoName = "Room-gba";     // Tu repositorio de ROMs
+  const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/`;
+
+  try {
+    const respuesta = await fetch(apiUrl);
+    const archivos = await respuesta.json();
+
+    const contenedorLista = document.getElementById("game-list");
+    if (!contenedorLista) return;
+    contenedorLista.innerHTML = "";
+
+    // Filtrar únicamente los archivos con extensión .gba
+    const roms = archivos.filter(archivo => archivo.name.toLowerCase().endsWith(".gba"));
+
+    if (roms.length === 0) {
+      contenedorLista.innerHTML = "<p style='text-align:center; font-size:12px; color:#f87171;'>No se encontraron juegos en el repositorio.</p>";
+      return;
+    }
+
+    // Generar la interfaz y botones para cada juego encontrado
+    roms.forEach(rom => {
+      const nombreBonito = rom.name.replace(".gba", "").replace(/[-_]/g, " ");
+      const romUrl = `https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@main/${rom.name}`;
+
+      const itemDiv = document.createElement("div");
+      itemDiv.className = "game-item";
+      itemDiv.innerHTML = `
+        <span style="font-size: 14px; word-break: break-all; max-width: 60%;">🎮 ${nombreBonito}</span>
+        <button class="btn-play-rom" data-rom-url="${romUrl}">Jugar</button>
+      `;
+
+      contenedorLista.appendChild(itemDiv);
+    });
+
+    // Activar los clics en los botones generados
+    activarBotonesDeJuego();
+
+  } catch (error) {
+    console.error("Error al obtener los juegos de GitHub:", error);
+  }
+}
+
+function activarBotonesDeJuego() {
+  document.querySelectorAll(".btn-play-rom").forEach(button => {
+    button.addEventListener("click", (e) => {
+      const romUrl = e.target.getAttribute("data-rom-url");
+      if (romUrl) {
+        iniciarEmulador(romUrl);
+      }
+    });
+  });
 }
 
 // ==========================================
