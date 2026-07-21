@@ -50,7 +50,7 @@
     .btn-save { background-color: #22c55e; color: #fff; }
     .btn-load { background-color: #3b82f6; color: #fff; }
     .hidden { display: none !important; }
-    #error-msg { color: #f87171; text-align: center; font-size: 14px; }
+    #auth-error { color: #f87171; text-align: center; font-size: 14px; }
     
     /* Estilos del Emulador y Tienda */
     #emulator-wrapper {
@@ -123,17 +123,13 @@
     <button id="btn-load-cloud" class="btn-load">☁️ Cargar Partida</button>
   </div>
 
-  <!-- TIENDA DE JUEGOS (GITHUB / JSDELIVR) -->
+  <!-- TIENDA DE JUEGOS AUTOMÁTICA (GITHUB) -->
   <div id="store-section" class="store-container hidden">
     <h3>🛒 Tienda de Juegos (GitHub)</h3>
-    <div style="font-size: 12px; color: #9ca3af; text-align: center; margin-bottom: 10px;">Juega directamente desde la nube sin descargar</div>
+    <div style="font-size: 12px; color: #9ca3af; text-align: center; margin-bottom: 10px;">Cargando juegos automáticamente...</div>
     
-    <!-- Aquí puedes agregar tus juegos subidos a GitHub -->
-    <div class="game-item">
-      <span>Tekken Advance</span>
-      <button class="btn-play-rom" data-rom-url="https://cdn.jsdelivr.net/gh/Lucas2026apks/Room-gba@main/Tekken%20Advance%20(Europe).gba">Jugar</button>
-    </div>
-    <!-- Puedes duplicar un bloque .game-item para cada juego nuevo que subas -->
+    <!-- Aquí la app inyectará los juegos solos al iniciar sesión -->
+    <div id="game-list"></div>
   </div>
 
   <!-- CONTENEDOR DEL EMULADOR -->
@@ -144,4 +140,4 @@
   <!-- LLAMADA AL SCRIPT PRINCIPAL -->
   <script type="module" src="./app.js"></script>
 </body>
-</html>
+  </html>
