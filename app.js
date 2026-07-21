@@ -122,6 +122,7 @@ function cargarJuegosAutomaticos() {
   // Agrega aquí los nombres exactos de tus archivos .gba conforme los vayas subiendo al repositorio Room-gba
   const misJuegos = [
     "Tekken Advance (Europe).gba"
+    "Pokemon - Edicion Rojo Fuego (Spain).gba"
     // Ejemplo para cuando subas otro: "Pokemon Esmeralda.gba",
   ];
 
