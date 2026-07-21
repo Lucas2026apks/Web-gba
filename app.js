@@ -72,7 +72,7 @@ onAuthStateChanged(auth, (user) => {
     emulatorWrapper.classList.remove("hidden");
     userEmailDisplay.innerText = user.email;
     
-    // Escanear automáticamente los juegos de GitHub al iniciar sesión
+    // Cargar la tienda de juegos al iniciar sesión
     cargarJuegosAutomaticos();
     
   } else {
@@ -112,51 +112,43 @@ function iniciarEmulador(urlJuego) {
 }
 
 // ==========================================
-// TIENDA AUTOMÁTICA (GITHUB / JSDELIVR)
+// TIENDA DE JUEGOS (LISTA DIRECTA DESDE GITHUB)
 // ==========================================
 
-async function cargarJuegosAutomaticos() {
-  const repoOwner = "Lucas2026apks"; // Tu usuario de GitHub
-  const repoName = "Room-gba";     // Tu repositorio de ROMs
-  const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/`;
+function cargarJuegosAutomaticos() {
+  const repoOwner = "Lucas2026apks"; 
+  const repoName = "Room-gba";     
+  
+  // Agrega aquí los nombres exactos de tus archivos .gba conforme los vayas subiendo al repositorio Room-gba
+  const misJuegos = [
+    "Tekken Advance (Europe).gba"
+    // Ejemplo para cuando subas otro: "Pokemon Esmeralda.gba",
+  ];
 
-  try {
-    const respuesta = await fetch(apiUrl);
-    const archivos = await respuesta.json();
+  const contenedorLista = document.getElementById("game-list");
+  if (!contenedorLista) return;
+  contenedorLista.innerHTML = "";
 
-    const contenedorLista = document.getElementById("game-list");
-    if (!contenedorLista) return;
-    contenedorLista.innerHTML = "";
-
-    // Filtrar únicamente los archivos con extensión .gba
-    const roms = archivos.filter(archivo => archivo.name.toLowerCase().endsWith(".gba"));
-
-    if (roms.length === 0) {
-      contenedorLista.innerHTML = "<p style='text-align:center; font-size:12px; color:#f87171;'>No se encontraron juegos en el repositorio.</p>";
-      return;
-    }
-
-    // Generar la interfaz y botones para cada juego encontrado
-    roms.forEach(rom => {
-      const nombreBonito = rom.name.replace(".gba", "").replace(/[-_]/g, " ");
-      const romUrl = `https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@main/${rom.name}`;
-
-      const itemDiv = document.createElement("div");
-      itemDiv.className = "game-item";
-      itemDiv.innerHTML = `
-        <span style="font-size: 14px; word-break: break-all; max-width: 60%;">🎮 ${nombreBonito}</span>
-        <button class="btn-play-rom" data-rom-url="${romUrl}">Jugar</button>
-      `;
-
-      contenedorLista.appendChild(itemDiv);
-    });
-
-    // Activar los clics en los botones generados
-    activarBotonesDeJuego();
-
-  } catch (error) {
-    console.error("Error al obtener los juegos de GitHub:", error);
+  if (misJuegos.length === 0) {
+    contenedorLista.innerHTML = "<p style='text-align:center; font-size:12px; color:#f87171;'>No hay juegos configurados.</p>";
+    return;
   }
+
+  misJuegos.forEach(nombreArchivo => {
+    const nombreBonito = nombreArchivo.replace(".gba", "").replace(/[-_]/g, " ");
+    const romUrl = `https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@main/${encodeURIComponent(nombreArchivo)}`;
+
+    const itemDiv = document.createElement("div");
+    itemDiv.className = "game-item";
+    itemDiv.innerHTML = `
+      <span style="font-size: 14px; word-break: break-all; max-width: 60%;">🎮 ${nombreBonito}</span>
+      <button class="btn-play-rom" data-rom-url="${romUrl}">Jugar</button>
+    `;
+
+    contenedorLista.appendChild(itemDiv);
+  });
+
+  activarBotonesDeJuego();
 }
 
 function activarBotonesDeJuego() {
