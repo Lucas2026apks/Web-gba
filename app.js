@@ -125,9 +125,8 @@ function cargarJuegosAutomaticos() {
   
   // Nombres corregidos exactamente iguales a los de tu GitHub
   const misJuegos = [
-    "geometri dash.gba",
     "Tekken Advance (Europe).gba",
-    "Pokemon - Edicion Rojo Fuego (Spain).gba"
+    "Pokemon - Edicion Rojo Fuego (Spain).gba",
   ];
 
   const contenedorLista = document.getElementById("game-list");
