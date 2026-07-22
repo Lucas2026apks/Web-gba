@@ -72,7 +72,6 @@ onAuthStateChanged(auth, (user) => {
     emulatorWrapper.classList.remove("hidden");
     userEmailDisplay.innerText = user.email;
     
-    // Cargar la tienda de juegos al iniciar sesión
     cargarJuegosAutomaticos();
     
   } else {
@@ -97,7 +96,6 @@ romInput.addEventListener("change", (evento) => {
   }
 });
 
-// Función central para arrancar EmulatorJS con rutas CDN estables (sin errores CORS)
 function iniciarEmulador(urlJuego) {
   document.getElementById("game").innerHTML = "";
 
@@ -106,7 +104,13 @@ function iniciarEmulador(urlJuego) {
   window.EJS_gameUrl = urlJuego;
   window.EJS_pathtodata = "https://cdn.jsdelivr.net/npm/emulatorjs@latest/data/";
 
+  const scriptExistente = document.getElementById("ejs-loader-script");
+  if (scriptExistente) {
+    scriptExistente.remove();
+  }
+
   const script = document.createElement("script");
+  script.id = "ejs-loader-script";
   script.src = "https://cdn.jsdelivr.net/npm/emulatorjs@latest/data/loader.js";
   document.body.appendChild(script);
 }
@@ -119,9 +123,9 @@ function cargarJuegosAutomaticos() {
   const repoOwner = "Lucas2026apks"; 
   const repoName = "Room-gba";     
   
-  // Lista con Geometry Dash, Tekken y Pokémon
+  // Nombres corregidos exactamente iguales a los de tu GitHub
   const misJuegos = [
-    "Geometry Dash.gba",
+    "geometri dash.gba",
     "Tekken Advance (Europe).gba",
     "Pokemon - Edicion Rojo Fuego (Spain).gba"
   ];
