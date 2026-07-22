@@ -86,7 +86,7 @@ onAuthStateChanged(auth, (user) => {
 });
 
 // ==========================================
-// SECCIÓN DEL EMULADOR GBA (CON MULTIJUGADOR NETPLAY)
+// SECCIÓN DEL EMULADOR GBA
 // ==========================================
 
 romInput.addEventListener("change", (evento) => {
@@ -97,7 +97,7 @@ romInput.addEventListener("change", (evento) => {
   }
 });
 
-// Función central para arrancar EmulatorJS con multijugador activado
+// Función central para arrancar EmulatorJS de forma limpia
 function iniciarEmulador(urlJuego) {
   document.getElementById("game").innerHTML = "";
 
@@ -105,9 +105,6 @@ function iniciarEmulador(urlJuego) {
   window.EJS_core = "gba";
   window.EJS_gameUrl = urlJuego;
   window.EJS_pathtodata = "https://raw.githack.com/EmulatorJS/EmulatorJS/main/data/";
-  
-  // Activar opciones de multijugador en red globalmente
-  window.EJS_netplay = true;
 
   const script = document.createElement("script");
   script.src = "https://raw.githack.com/EmulatorJS/EmulatorJS/main/data/loader.js";
@@ -122,10 +119,11 @@ function cargarJuegosAutomaticos() {
   const repoOwner = "Lucas2026apks"; 
   const repoName = "Room-gba";     
   
-  // Lista de tus juegos en el repositorio Room-gba
+  // Lista con Geometry Dash, Tekken y Pokémon (sin Dragon Ball)
   const misJuegos = [
-    "Tekken Advance (Europe).gba"
-    "geometri dash.gba"
+    "Geometry Dash.gba",
+    "Tekken Advance (Europe).gba",
+    "Pokemon - Edicion Rojo Fuego (Spain).gba"
   ];
 
   const contenedorLista = document.getElementById("game-list");
