@@ -124,8 +124,7 @@ function cargarJuegosAutomaticos() {
   
   // Lista de tus juegos en el repositorio Room-gba
   const misJuegos = [
-    "Tekken Advance (Europe).gba",
-    "Pokemon - Edicion Rojo Fuego (Spain).gba"
+    "Tekken Advance (Europe).gba"
     "geometri dash.gba"
   ];
 
