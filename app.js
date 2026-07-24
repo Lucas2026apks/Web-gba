@@ -72,6 +72,7 @@ onAuthStateChanged(auth, (user) => {
     emulatorWrapper.classList.remove("hidden");
     userEmailDisplay.innerText = user.email;
     
+    // Cargar la tienda de juegos al iniciar sesión
     cargarJuegosAutomaticos();
     
   } else {
@@ -85,7 +86,7 @@ onAuthStateChanged(auth, (user) => {
 });
 
 // ==========================================
-// SECCIÓN DEL EMULADOR GBA
+// SECCIÓN DEL EMULADOR GBA (EmulatorJS LOCAL)
 // ==========================================
 
 romInput.addEventListener("change", (evento) => {
@@ -96,22 +97,17 @@ romInput.addEventListener("change", (evento) => {
   }
 });
 
+// Función central para arrancar EmulatorJS con cualquier URL de ROM
 function iniciarEmulador(urlJuego) {
   document.getElementById("game").innerHTML = "";
 
   window.EJS_player = "#game";
   window.EJS_core = "gba";
   window.EJS_gameUrl = urlJuego;
-  window.EJS_pathtodata = "https://cdn.jsdelivr.net/npm/emulatorjs@latest/data/";
-
-  const scriptExistente = document.getElementById("ejs-loader-script");
-  if (scriptExistente) {
-    scriptExistente.remove();
-  }
+  window.EJS_pathtodata = "https://raw.githack.com/EmulatorJS/EmulatorJS/main/data/";
 
   const script = document.createElement("script");
-  script.id = "ejs-loader-script";
-  script.src = "https://cdn.jsdelivr.net/npm/emulatorjs@latest/data/loader.js";
+  script.src = "https://raw.githack.com/EmulatorJS/EmulatorJS/main/data/loader.js";
   document.body.appendChild(script);
 }
 
@@ -123,10 +119,10 @@ function cargarJuegosAutomaticos() {
   const repoOwner = "Lucas2026apks"; 
   const repoName = "Room-gba";     
   
-  // Nombres corregidos exactamente iguales a los de tu GitHub
+  // Lista de tus juegos en el repositorio Room-gba
   const misJuegos = [
     "Tekken Advance (Europe).gba",
-    "Pokemon - Edicion Rojo Fuego (Spain).gba",
+    "Pokemon - Edicion Rojo Fuego (Spain).gba"
   ];
 
   const contenedorLista = document.getElementById("game-list");
