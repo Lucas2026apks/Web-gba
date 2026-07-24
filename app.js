@@ -123,7 +123,6 @@ function cargarJuegosAutomaticos() {
   const misJuegos = [
     "Tekken Advance (Europe).gba",
     "Pokemon - Edicion Rojo Fuego (Spain).gba"
-    "geometri dash.gba",
   ];
 
   const contenedorLista = document.getElementById("game-list");
