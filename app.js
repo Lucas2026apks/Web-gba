@@ -158,7 +158,7 @@ function cargarJuegosAutomaticos() {
   // Cambia a ".jpg" si tus imágenes guardadas en GitHub usan esa extensión
   const extensionImagen = ".png"; 
   
-  // Lista de tus juegos (añadido Metroid Fusion)
+  // Lista de tus juegos (añadido Sonic Advance)
   const misJuegos = [
     "Tekken Advance (Europe).gba",
     "Geometry_Dash.gba",
