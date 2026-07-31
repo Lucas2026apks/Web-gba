@@ -2,6 +2,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+import { getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // 2. Tu configuración de Firebase
 const firebaseConfig = {
@@ -18,11 +19,13 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const storage = getStorage(app);
+const db = getFirestore(app);
 
 // 3. Obtener elementos del HTML
 const authSection = document.getElementById("auth-section");
 const gameSection = document.getElementById("game-section");
 const storeSection = document.getElementById("store-section");
+const rankingSection = document.getElementById("ranking-section");
 const emulatorWrapper = document.getElementById("emulator-wrapper");
 const userEmailDisplay = document.getElementById("user-email-display");
 const authError = document.getElementById("auth-error");
@@ -32,10 +35,16 @@ const passwordInput = document.getElementById("password-input");
 const btnLogin = document.getElementById("btn-login");
 const btnRegister = document.getElementById("btn-register");
 const btnLogout = document.getElementById("btn-logout");
+
+const btnGotoStore = document.getElementById("btn-goto-store");
+const btnGotoImport = document.getElementById("btn-goto-import");
+const btnBackStore = document.getElementById("btn-back-store");
 const romInput = document.getElementById("rom-input");
 
 const btnSaveCloud = document.getElementById("btn-save-cloud");
 const btnLoadCloud = document.getElementById("btn-load-cloud");
+
+let intervaloTiempo = null;
 
 // ==========================================
 // SECCIÓN DE AUTENTICACIÓN
@@ -68,25 +77,47 @@ onAuthStateChanged(auth, (user) => {
   if (user) {
     authSection.classList.add("hidden");
     gameSection.classList.remove("hidden");
-    storeSection.classList.remove("hidden");
-    emulatorWrapper.classList.remove("hidden");
+    rankingSection.classList.remove("hidden");
+    
+    storeSection.classList.add("hidden");
+    emulatorWrapper.classList.add("hidden");
+    
     userEmailDisplay.innerText = user.email;
-    
-    // Cargar la tienda de juegos al iniciar sesión
-    cargarJuegosAutomaticos();
-    
+    cargarTopGlobal();
   } else {
     authSection.classList.remove("hidden");
     gameSection.classList.add("hidden");
     storeSection.classList.add("hidden");
+    rankingSection.classList.add("hidden");
     emulatorWrapper.classList.add("hidden");
     emailInput.value = "";
     passwordInput.value = "";
+    
+    if (intervaloTiempo) clearInterval(intervaloTiempo);
   }
 });
 
 // ==========================================
-// SECCIÓN DEL EMULADOR GBA (EmulatorJS LOCAL)
+// NAVEGACIÓN DE BOTONES PRINCIPALES
+// ==========================================
+
+btnGotoStore.addEventListener("click", () => {
+  gameSection.classList.add("hidden");
+  storeSection.classList.remove("hidden");
+  cargarJuegosAutomaticos();
+});
+
+btnBackStore.addEventListener("click", () => {
+  storeSection.classList.add("hidden");
+  gameSection.classList.remove("hidden");
+});
+
+btnGotoImport.addEventListener("click", () => {
+  romInput.click();
+});
+
+// ==========================================
+// SECCIÓN DEL EMULADOR GBA (EmulatorJS)
 // ==========================================
 
 romInput.addEventListener("change", (evento) => {
@@ -97,8 +128,8 @@ romInput.addEventListener("change", (evento) => {
   }
 });
 
-// Función central para arrancar EmulatorJS con cualquier URL de ROM
 function iniciarEmulador(urlJuego) {
+  emulatorWrapper.classList.remove("hidden");
   document.getElementById("game").innerHTML = "";
 
   window.EJS_player = "#game";
@@ -109,20 +140,27 @@ function iniciarEmulador(urlJuego) {
   const script = document.createElement("script");
   script.src = "https://raw.githack.com/EmulatorJS/EmulatorJS/main/data/loader.js";
   document.body.appendChild(script);
+
+  const user = auth.currentUser;
+  if (user) {
+    iniciarContadorTiempo(user.uid);
+  }
 }
 
 // ==========================================
-// TIENDA DE JUEGOS (LISTA DIRECTA DESDE GITHUB)
+// TIENDA DE JUEGOS (GITHUB) CON IMÁGENES AUTOMÁTICAS
 // ==========================================
 
 function cargarJuegosAutomaticos() {
   const repoOwner = "Lucas2026apks"; 
   const repoName = "Room-gba";     
   
-  // Lista de tus juegos en el repositorio Room-gba
+  // Cambia a ".jpg" si tus imágenes guardadas en GitHub usan esa extensión
+  const extensionImagen = ".png"; 
+  
   const misJuegos = [
     "Tekken Advance (Europe).gba",
-    "Pokemon - Edicion Rojo Fuego (Spain).gba"
+    "Geometry_Dash.gba"
   ];
 
   const contenedorLista = document.getElementById("game-list");
@@ -137,12 +175,22 @@ function cargarJuegosAutomaticos() {
   misJuegos.forEach(nombreArchivo => {
     const nombreBonito = nombreArchivo.replace(".gba", "").replace(/[-_]/g, " ");
     const romUrl = `https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@main/${encodeURIComponent(nombreArchivo)}`;
+    
+    // Genera automáticamente la URL de la imagen en tu GitHub usando el nombre exacto del ROM
+    const nombreImagen = nombreArchivo.replace(".gba", extensionImagen);
+    const imagenUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/main/${encodeURIComponent(nombreImagen)}`;
 
     const itemDiv = document.createElement("div");
     itemDiv.className = "game-item";
     itemDiv.innerHTML = `
-      <span style="font-size: 14px; word-break: break-all; max-width: 60%;">🎮 ${nombreBonito}</span>
-      <button class="btn-play-rom" data-rom-url="${romUrl}">Jugar</button>
+      <img src="${imagenUrl}" alt="Cover" class="game-cover" onerror="this.src='https://via.placeholder.com/60?text=GBA'">
+      <div class="game-info">
+        <span style="font-size: 13px; font-weight: bold; color: #fff; word-break: break-all;">🎮 ${nombreBonito}</span>
+        <div class="game-actions">
+          <button class="btn-test" data-rom-url="${romUrl}">Probar</button>
+          <button class="btn-download" data-download-url="${romUrl}" data-file-name="${nombreArchivo}">⬇️ Descargar</button>
+        </div>
+      </div>
     `;
 
     contenedorLista.appendChild(itemDiv);
@@ -152,18 +200,108 @@ function cargarJuegosAutomaticos() {
 }
 
 function activarBotonesDeJuego() {
-  document.querySelectorAll(".btn-play-rom").forEach(button => {
+  // Botón "Probar" (Inicia el juego en el emulador web)
+  document.querySelectorAll(".btn-test").forEach(button => {
     button.addEventListener("click", (e) => {
       const romUrl = e.target.getAttribute("data-rom-url");
       if (romUrl) {
+        storeSection.classList.add("hidden");
         iniciarEmulador(romUrl);
       }
+    });
+  });
+
+  // Botón "⬇️ Descargar" (Descarga la ROM directamente para jugar offline)
+  document.querySelectorAll(".btn-download").forEach(button => {
+    button.addEventListener("click", (e) => {
+      const downloadUrl = e.target.getAttribute("data-download-url");
+      const fileName = e.target.getAttribute("data-file-name");
+      
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     });
   });
 }
 
 // ==========================================
-// SECCIÓN DE GUARDADO Y CARGA EN LA NUBE (.sav)
+// CONTROL DE TIEMPO Y TOP GLOBAL (FIRESTORE)
+// ==========================================
+
+function iniciarContadorTiempo(userId) {
+  if (intervaloTiempo) clearInterval(intervaloTiempo);
+
+  intervaloTiempo = setInterval(async () => {
+    await guardarTiempoEnFirestore(userId, 1);
+  }, 1000);
+}
+
+async function guardarTiempoEnFirestore(userId, segundosNuevos) {
+  try {
+    const userRef = doc(db, "usuarios", userId);
+    const userDoc = await getDoc(userRef);
+
+    let tiempoTotal = segundosNuevos;
+    let emailUser = auth.currentUser ? auth.currentUser.email : "Anónimo";
+
+    if (userDoc.exists()) {
+      const data = userDoc.data();
+      tiempoTotal = (data.tiempoJugado || 0) + segundosNuevos;
+    }
+
+    await setDoc(userRef, {
+      email: emailUser,
+      tiempoJugado: tiempoTotal
+    }, { merge: true });
+
+    cargarTopGlobal();
+  } catch (error) {
+    console.error("Error al actualizar el tiempo:", error);
+  }
+}
+
+async function cargarTopGlobal() {
+  const rankingList = document.getElementById("ranking-list");
+  if (!rankingList) return;
+
+  try {
+    const q = query(collection(db, "usuarios"), orderBy("tiempoJugado", "desc"), limit(10));
+    const querySnapshot = await getDocs(q);
+
+    rankingList.innerHTML = "";
+
+    if (querySnapshot.empty) {
+      rankingList.innerHTML = "<p style='text-align:center; font-size:12px; color:#9ca3af;'>Aún no hay registros de tiempo.</p>";
+      return;
+    }
+
+    querySnapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      const emailOculto = data.email ? data.email.split("@")[0] + "@..." : "Usuario";
+      
+      const horas = Math.floor(data.tiempoJugado / 3600);
+      const minutos = Math.floor((data.tiempoJugado % 3600) / 60);
+      const segundos = data.tiempoJugado % 60;
+
+      const itemDiv = document.createElement("div");
+      itemDiv.className = "game-item";
+      itemDiv.innerHTML = `
+        <span style="font-size: 13px; color: #cbd5e1;">👤 ${emailOculto}</span>
+        <span style="font-size: 13px; font-weight: bold; color: #4ade80;">⏱️ ${horas}h ${minutos}m ${segundos}s</span>
+      `;
+      rankingList.appendChild(itemDiv);
+    });
+
+  } catch (error) {
+    console.error("Error al cargar el top global:", error);
+  }
+}
+
+// ==========================================
+// GUARDADO Y CARGA EN LA NUBE (.sav)
 // ==========================================
 
 btnSaveCloud.addEventListener("click", async () => {
