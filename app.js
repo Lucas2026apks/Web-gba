@@ -163,7 +163,8 @@ function cargarJuegosAutomaticos() {
     "Tekken Advance (Europe).gba",
     "Geometry_Dash.gba",
     "Super Mario Bros. 3.gba",
-    "Metroid Fusion.gba"
+    "Metroid Fusion.gba",
+    "Sonic Advance (Europe).gba"
   ];
 
   const contenedorLista = document.getElementById("game-list");
