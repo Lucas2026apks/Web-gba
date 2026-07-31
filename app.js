@@ -158,9 +158,11 @@ function cargarJuegosAutomaticos() {
   // Cambia a ".jpg" si tus imágenes guardadas en GitHub usan esa extensión
   const extensionImagen = ".png"; 
   
+  // Lista de tus juegos con comas correctas
   const misJuegos = [
     "Tekken Advance (Europe).gba",
-    "Geometry_Dash.gba"
+    "Geometry_Dash.gba",
+    "Super Mario Bros. 3.gba"
   ];
 
   const contenedorLista = document.getElementById("game-list");
