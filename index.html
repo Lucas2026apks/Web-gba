@@ -3,255 +3,175 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Game Boy Advance Online - Lucas</title>
-  
-  <!-- Logo de la pestaña de la página web -->
-  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/Lucas2026apks/Room-gba/main/logo.png">
-
-  <!-- Estilos CSS integrados para una interfaz moderna y limpia -->
+  <title>Game Boy Advance Virtual</title>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-
     body {
-      background-color: #0f172a;
-      color: #f8fafc;
+      font-family: Arial, sans-serif;
+      background-color: #121824;
+      color: #ffffff;
+      margin: 0;
+      padding: 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      min-height: 100vh;
-      padding: 20px;
     }
-
-    h1, h2 {
-      margin-bottom: 15px;
-      color: #38bdf8;
+    h2, h3 {
       text-align: center;
     }
-
-    .hidden {
-      display: none !important;
-    }
-
     .card {
-      background-color: #1e293b;
+      background-color: #1e2535;
       padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
       width: 100%;
-      max-width: 450px;
+      max-width: 400px;
       margin-bottom: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
     }
-
     input {
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid #334155;
-      background-color: #0f172a;
-      color: #fff;
-      font-size: 14px;
-    }
-
-    input:focus {
-      outline: none;
-      border-color: #38bdf8;
-    }
-
-    button {
-      padding: 12px;
-      border-radius: 8px;
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
       border: none;
-      background-color: #38bdf8;
-      color: #0f172a;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      border: none;
+      border-radius: 5px;
       font-weight: bold;
-      font-size: 14px;
       cursor: pointer;
-      transition: background 0.2s;
     }
-
-    button:hover {
-      background-color: #0ea5e9;
-    }
-
-    .btn-secondary {
-      background-color: #334155;
-      color: #f8fafc;
-    }
-
-    .btn-secondary:hover {
-      background-color: #475569;
-    }
-
-    .btn-danger {
-      background-color: #ef4444;
-      color: #fff;
-    }
-
-    .btn-danger:hover {
-      background-color: #dc2626;
-    }
-
-    #error-msg, #auth-error {
-      color: #f87171;
-      font-size: 13px;
-      text-align: center;
-    }
-
-    /* Contenedor del Emulador */
+    .btn-login { background-color: #f472b6; color: #fff; }
+    .btn-register { background-color: #db2777; color: #fff; }
+    .btn-logout { background-color: #ef4444; color: #fff; width: auto; padding: 5px 15px; }
+    .btn-store { background-color: #8b5cf6; color: #fff; }
+    .btn-import { background-color: #3b82f6; color: #fff; }
+    .btn-save { background-color: #22c55e; color: #fff; }
+    .btn-load { background-color: #eab308; color: #fff; }
+    .hidden { display: none !important; }
+    #auth-error { color: #f87171; text-align: center; font-size: 14px; }
+    
+    /* Estilos del Emulador y Secciones */
     #emulator-wrapper {
       width: 100%;
-      max-width: 640px;
-      height: 480px;
-      background-color: #000;
-      border-radius: 12px;
-      overflow: hidden;
-      margin-bottom: 20px;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+      max-width: 600px;
+      margin-top: 20px;
     }
-
     #game {
       width: 100%;
-      height: 100%;
+      height: 400px;
+      background: #000;
+      margin-top: 10px;
+      border-radius: 8px;
     }
-
-    /* Estilos de la Tienda de Juegos / Listas */
-    .game-list-container {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      max-height: 350px;
-      overflow-y: auto;
+    .store-container {
+      background-color: #1e2535;
+      padding: 15px;
+      border-radius: 10px;
+      width: 100%;
+      max-width: 400px;
+      margin-bottom: 20px;
     }
-
+    
+    /* Estilo de los elementos de la tienda con imagen y botones duales */
     .game-item {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      background-color: #0f172a;
+      background: #2a3447;
       padding: 10px;
+      margin-top: 10px;
       border-radius: 8px;
-      border: 1px solid #334155;
       gap: 10px;
     }
-
     .game-cover {
-      width: 50px;
-      height: 50px;
+      width: 60px;
+      height: 60px;
       object-fit: cover;
-      border-radius: 6px;
-      background-color: #334155;
+      border-radius: 5px;
+      background: #121824;
+      flex-shrink: 0;
     }
-
     .game-info {
       flex-grow: 1;
       display: flex;
       flex-direction: column;
       gap: 5px;
     }
-
     .game-actions {
       display: flex;
       gap: 5px;
     }
-
     .game-actions button {
-      padding: 6px 10px;
+      width: auto;
+      padding: 5px 10px;
       font-size: 12px;
+      margin: 0;
     }
-
-    .btn-test {
-      background-color: #10b981;
-      color: #fff;
-    }
-    .btn-test:hover {
-      background-color: #059669;
-    }
-
-    .btn-download {
-      background-color: #6366f1;
-      color: #fff;
-    }
-    .btn-download:hover {
-      background-color: #4f46e5;
-    }
-
-    .user-panel {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 100%;
-      max-width: 640px;
-      margin-bottom: 15px;
-      background-color: #1e293b;
-      padding: 10px 15px;
-      border-radius: 8px;
-    }
+    .btn-test { background-color: #10b981; color: white; }
+    .btn-download { background-color: #3b82f6; color: white; }
   </style>
 </head>
 <body>
 
-  <!-- SECCIÓN 1: AUTENTICACIÓN (LOGIN / REGISTRO) -->
+  <h2>🎮 GBA Cloud Player</h2>
+
+  <!-- SECCIÓN DE AUTENTICACIÓN -->
   <div id="auth-section" class="card">
-    <h2>🎮 GBA Cloud Emulator</h2>
+    <h3>Ingresar</h3>
+    <p style="text-align:center; font-size:13px; color:#9ca3af;">Inicia sesión para jugar y guardar partidas</p>
+    
     <input type="email" id="email-input" placeholder="Correo electrónico">
     <input type="password" id="password-input" placeholder="Contraseña">
-    <button id="btn-login">Iniciar Sesión</button>
-    <button id="btn-register" class="btn-secondary">Registrarse</button>
+    
+    <button id="btn-login" class="btn-login">Iniciar Sesión</button>
+    <button id="btn-register" class="btn-register">Crear Cuenta</button>
+    
     <p id="auth-error"></p>
   </div>
 
-  <!-- SECCIÓN 2: PANEL DE CONTROL Y MENÚ PRINCIPAL -->
-  <div id="game-section" class="card hidden" style="max-width: 640px;">
-    <div class="user-panel">
-      <span style="font-size: 14px;" id="user-email-display">usuario@email.com</span>
-      <button id="btnLogout" class="btn-danger" style="padding: 6px 12px; font-size: 12px;">Cerrar Sesión</button>
+  <!-- SECCIÓN PRINCIPAL (MENÚ DE DOS BOTONES + NUBE) -->
+  <div id="game-section" class="card hidden">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <span id="user-email-display" style="font-size: 13px; color: #cbd5e1;"></span>
+      <button id="btn-logout" class="btn-logout">Cerrar Sesión</button>
     </div>
-
-    <h2>Menú Principal</h2>
-    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-      <button id="btn-goto-store" style="flex: 1;">🛒 Tienda de Juegos (GitHub)</button>
-      <button id="btn-goto-import" class="btn-secondary" style="flex: 1;">📂 Importar ROM Local</button>
-    </div>
+    <hr style="border-color: #2a3447; margin: 15px 0;">
     
-    <!-- Input oculto para buscar ROMs locales en la PC/Celular -->
-    <input type="file" id="rom-input" accept=".gba" class="hidden">
+    <h3>Menú Principal</h3>
+    <button id="btn-goto-store" class="btn-store">🛒 Ir a la Tienda de Juegos</button>
+    <button id="btn-goto-import" class="btn-import">📂 Importar juego .gba</button>
+    <input type="file" id="rom-input" accept=".gba" style="display: none;">
 
-    <div style="display: flex; gap: 10px; margin-top: 10px;">
-      <button id="btn-save-cloud" class="btn-test" style="flex: 1;">💾 Guardar Partida en Nube</button>
-      <button id="btn-load-cloud" class="btn-download" style="flex: 1;">☁️ Cargar Partida de Nube</button>
-    </div>
+    <hr style="border-color: #2a3447; margin: 15px 0;">
+    <h3>Gestión de Partida</h3>
+    <button id="btn-save-cloud" class="btn-save">💾 Guardar Partida en Nube</button>
+    <button id="btn-load-cloud" class="btn-load">☁️ Cargar Partida de Nube</button>
   </div>
 
-  <!-- SECCIÓN 3: TIENDA DE JOYAS / ROMS DE GITHUB -->
-  <div id="store-section" class="card hidden" style="max-width: 640px;">
-    <h2>🛒 Tienda Oficial de ROMs</h2>
-    <div id="game-list" class="game-list-container">
-      <!-- Los juegos cargados desde app.js se pintarán aquí automáticamente -->
-    </div>
-    <button id="btn-back-store" class="btn-secondary" style="margin-top: 10px;">⬅️ Volver al Menú</button>
+  <!-- TIENDA DE JUEGOS -->
+  <div id="store-section" class="store-container hidden">
+    <h3>🛒 Tienda de Juegos (GitHub)</h3>
+    <div style="font-size: 12px; color: #9ca3af; text-align: center; margin-bottom: 10px;">Selecciona un juego:</div>
+    <div id="game-list"></div>
+    <button id="btn-back-store" style="margin-top: 15px; background-color: #475569; color: white;">⬅️ Volver al Menú</button>
   </div>
 
-  <!-- SECCIÓN 4: CONTENEDOR DEL EMULADOR GBA -->
+  <!-- TOP GLOBAL DE TIEMPO JUGADO -->
+  <div id="ranking-section" class="store-container hidden">
+    <h3>🏆 Top Global - Tiempo Jugado</h3>
+    <div style="font-size: 12px; color: #9ca3af; text-align: center; margin-bottom: 10px;">Estadísticas en vivo:</div>
+    <div id="ranking-list"></div>
+  </div>
+
+  <!-- CONTENEDOR DEL EMULADOR -->
   <div id="emulator-wrapper" class="hidden">
+    <h3>🕹️ Emulador GBA</h3>
     <div id="game"></div>
   </div>
 
-  <!-- SECCIÓN 5: TOP GLOBAL DE TIEMPO JUGADO -->
-  <div id="ranking-section" class="card hidden" style="max-width: 640px;">
-    <h2>🏆 Top Global de Jugadores</h2>
-    <div id="ranking-list" class="game-list-container" style="max-height: 200px;">
-      <!-- El ranking Firestore aparecerá aquí -->
-    </div>
-  </div>
-
-  <!-- Carga del archivo JavaScript principal como módulo -->
-  <script type="module" src="app.js"></script>
+  <script type="module" src="./app.js"></script>
 </body>
   </html>
