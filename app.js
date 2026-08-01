@@ -164,7 +164,12 @@ function cargarJuegosAutomaticos() {
     "Geometry_Dash.gba",
     "Super Mario Bros. 3.gba",
     "Metroid Fusion.gba",
-    "Sonic Advance (Europe).gba"
+    "Sonic Advance (Europe).gba",
+    "Pac-Man.gba",
+    "Gradius Galaxies.gba",
+    "Crazy Taxi.gba"
+  
+    
   ];
 
   const contenedorLista = document.getElementById("game-list");
