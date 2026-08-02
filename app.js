@@ -167,7 +167,8 @@ function cargarJuegosAutomaticos() {
     "Sonic Advance (Europe).gba",
     "Pac-Man.gba",
     "Gradius Galaxies.gba",
-    "Crazy Taxi.gba"
+    "Crazy Taxi.gba",
+    "Mario vs Donkey Kong .png"
   
     
   ];
