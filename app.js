@@ -168,7 +168,9 @@ function cargarJuegosAutomaticos() {
     "Pac-Man.gba",
     "Gradius Galaxies.gba",
     "Crazy Taxi.gba",
-    "Mario vs Donkey Kong .gba"
+    "Mario vs Donkey Kong .gba",
+    "Doom.gba",
+    "Mega Man & Bass.gba"
   
     
   ];
