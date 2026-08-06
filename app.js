@@ -170,7 +170,8 @@ function cargarJuegosAutomaticos() {
     "Crazy Taxi.gba",
     "Mario vs Donkey Kong .gba",
     "Doom.gba",
-    "Mega Man & Bass.gba"
+    "Mega Man & Bass.gba",
+    "Metal Slug Advance.gba"
   
     
   ];
