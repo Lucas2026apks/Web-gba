@@ -1,10 +1,8 @@
-// 1. Importar Firebase desde los servidores de Google
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 import { getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// 2. Tu configuración de Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyDxH8yTuTFEbU9U8c7TjM7QVMuJueC9cpw",
   authDomain: "gameboyadvance-de-lucas.firebaseapp.com",
@@ -15,13 +13,11 @@ const firebaseConfig = {
   measurementId: "G-BTJ995LW31"
 };
 
-// Inicializar Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const storage = getStorage(app);
 const db = getFirestore(app);
 
-// 3. Obtener elementos del HTML
 const authSection = document.getElementById("auth-section");
 const gameSection = document.getElementById("game-section");
 const storeSection = document.getElementById("store-section");
@@ -43,6 +39,13 @@ const romInput = document.getElementById("rom-input");
 
 const btnSaveCloud = document.getElementById("btn-save-cloud");
 const btnLoadCloud = document.getElementById("btn-load-cloud");
+
+// Referencias del Explorador de Carpetas
+const folderView = document.getElementById("folder-view");
+const folderContentView = document.getElementById("folder-content-view");
+const folderTitleDisplay = document.getElementById("folder-title-display");
+const gamesInFolderList = document.getElementById("games-in-folder-list");
+const btnBackFolders = document.getElementById("btn-back-folders");
 
 let intervaloTiempo = null;
 
@@ -98,7 +101,7 @@ onAuthStateChanged(auth, (user) => {
 });
 
 // ==========================================
-// NAVEGACIÓN DE BOTONES PRINCIPALES
+// NAVEGACIÓN Y EXPLORADOR DE CARPETAS
 // ==========================================
 
 btnGotoStore.addEventListener("click", () => {
@@ -112,12 +115,17 @@ btnBackStore.addEventListener("click", () => {
   gameSection.classList.remove("hidden");
 });
 
+btnBackFolders.addEventListener("click", () => {
+  folderContentView.classList.add("hidden");
+  folderView.classList.remove("hidden");
+});
+
 btnGotoImport.addEventListener("click", () => {
   romInput.click();
 });
 
 // ==========================================
-// SECCIÓN DEL EMULADOR GBA (EmulatorJS)
+// EMULADOR GBA (EmulatorJS)
 // ==========================================
 
 romInput.addEventListener("change", (evento) => {
@@ -148,7 +156,7 @@ function iniciarEmulador(urlJuego) {
 }
 
 // ==========================================
-// TIENDA DE JUEGOS (GITHUB) ORGANIZADA POR CARPETAS
+// CARPETAS Y JUEGOS DESDE GITHUB
 // ==========================================
 
 function cargarJuegosAutomaticos() {
@@ -156,9 +164,8 @@ function cargarJuegosAutomaticos() {
   const repoName = "Room-gba";     
   const extensionImagen = ".png"; 
   
-  // Categorías de juegos organizadas por carpetas virtuales
   const categoriasJuegos = {
-    "super mario":[
+    "Super Mario": [
       "Super Mario Bros. 3.gba",
       "Mario vs Donkey Kong .gba",
       "Classic NES Series - Super Mario Bros.gba",
@@ -168,14 +175,13 @@ function cargarJuegosAutomaticos() {
       "Super Mario Advance 2 - Super Mario World.gba",
       "Super Mario Advance 3 - Yoshi's Island .gba"
     ],
-    " Sonic": [
+    "Sonic": [
       "Sonic Advance (Europe).gba"
-      
-      ],
-      "Mega Man":[
-      "Mega Man & Bass.gba",
     ],
-    " Acción y Clásicos": [
+    "Mega Man": [
+      "Mega Man & Bass.gba"
+    ],
+    "Acción y Clásicos": [
       "Tekken Advance (Europe).gba",
       "Geometry_Dash.gba",
       "Metroid Fusion.gba",
@@ -184,56 +190,60 @@ function cargarJuegosAutomaticos() {
       "Crazy Taxi.gba",
       "Doom.gba",
       "Metal Slug Advance.gba"
-    ],
-    
-    
+    ]
   };
 
-  const contenedorCategorias = document.getElementById("store-categories");
-  if (!contenedorCategorias) return;
-  contenedorCategorias.innerHTML = "";
+  folderView.classList.remove("hidden");
+  folderContentView.classList.add("hidden");
+  folderView.innerHTML = "";
 
   for (const [nombreCategoria, listaArchivos] of Object.entries(categoriasJuegos)) {
-    // Contenedor visual para cada "carpeta"
-    const folderDiv = document.createElement("div");
-    folderDiv.style.marginBottom = "15px";
-    folderDiv.style.background = "#181f2c";
-    folderDiv.style.padding = "10px";
-    folderDiv.style.borderRadius = "8px";
+    const folderItem = document.createElement("div");
+    folderItem.className = "game-item";
+    folderItem.style.cursor = "pointer";
+    folderItem.innerHTML = `
+      <div style="font-size: 26px; padding-left: 5px;">📁</div>
+      <div class="game-info">
+        <span style="font-size: 14px; font-weight: bold; color: #fff;">${nombreCategoria}</span>
+        <span style="font-size: 11px; color: #9ca3af;">${listaArchivos.length} elementos</span>
+      </div>
+      <div style="color: #9ca3af; font-size: 14px; padding-right: 5px;">▶</div>
+    `;
 
-    // Título de la carpeta
-    const folderTitle = document.createElement("div");
-    folderTitle.innerHTML = `<span style="font-size: 14px; font-weight: bold; color: #f472b6;">📂 ${nombreCategoria} (${listaArchivos.length})</span>`;
-    folderDiv.appendChild(folderTitle);
-
-    // Contenedor interno de los juegos de la carpeta
-    const gamesInFolder = document.createElement("div");
-    gamesInFolder.style.marginTop = "8px";
-
-    listaArchivos.forEach(nombreArchivo => {
-      const nombreBonito = nombreArchivo.replace(".gba", "").replace(/[-_]/g, " ");
-      const romUrl = `https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@main/${encodeURIComponent(nombreArchivo)}`;
-      const nombreImagen = nombreArchivo.replace(".gba", extensionImagen);
-      const imagenUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/main/${encodeURIComponent(nombreImagen)}`;
-
-      const itemDiv = document.createElement("div");
-      itemDiv.className = "game-item";
-      itemDiv.innerHTML = `
-        <img src="${imagenUrl}" alt="Cover" class="game-cover" onerror="this.src='https://via.placeholder.com/60?text=GBA'">
-        <div class="game-info">
-          <span style="font-size: 13px; font-weight: bold; color: #fff; word-break: break-all;">🎮 ${nombreBonito}</span>
-          <div class="game-actions">
-            <button class="btn-test" data-rom-url="${romUrl}">Probar</button>
-            <button class="btn-download" data-download-url="${romUrl}" data-file-name="${nombreArchivo}">⬇️ Descargar</button>
-          </div>
-        </div>
-      `;
-      gamesInFolder.appendChild(itemDiv);
+    folderItem.addEventListener("click", () => {
+       abrirCarpeta(nombreCategoria, listaArchivos, repoOwner, repoName, extensionImagen);
     });
 
-    folderDiv.appendChild(gamesInFolder);
-    contenedorCategorias.appendChild(folderDiv);
+    folderView.appendChild(folderItem);
   }
+}
+
+function abrirCarpeta(nombreCategoria, listaArchivos, repoOwner, repoName, extensionImagen) {
+  folderView.classList.add("hidden");
+  folderContentView.classList.remove("hidden");
+  folderTitleDisplay.innerHTML = `📂 Carpeta: ${nombreCategoria} (${listaArchivos.length})`;
+  gamesInFolderList.innerHTML = "";
+
+  listaArchivos.forEach(nombreArchivo => {
+    const nombreBonito = nombreArchivo.replace(".gba", "").replace(/[-_]/g, " ");
+    const romUrl = `https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@main/${encodeURIComponent(nombreArchivo)}`;
+    const nombreImagen = nombreArchivo.replace(".gba", extensionImagen);
+    const imagenUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/main/${encodeURIComponent(nombreImagen)}`;
+
+    const itemDiv = document.createElement("div");
+    itemDiv.className = "game-item";
+    itemDiv.innerHTML = `
+      <img src="${imagenUrl}" alt="Cover" class="game-cover" onerror="this.src='https://via.placeholder.com/60?text=GBA'">
+      <div class="game-info">
+        <span style="font-size: 13px; font-weight: bold; color: #fff; word-break: break-all;">🎮 ${nombreBonito}</span>
+        <div class="game-actions">
+          <button class="btn-test" data-rom-url="${romUrl}">Probar</button>
+          <button class="btn-download" data-download-url="${romUrl}" data-file-name="${nombreArchivo}">⬇️ Descargar</button>
+        </div>
+      </div>
+    `;
+    gamesInFolderList.appendChild(itemDiv);
+  });
 
   activarBotonesDeJuego();
 }
