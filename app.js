@@ -148,72 +148,97 @@ function iniciarEmulador(urlJuego) {
 }
 
 // ==========================================
-// TIENDA DE JUEGOS (GITHUB) CON IMÁGENES AUTOMÁTICAS
+// TIENDA DE JUEGOS (GITHUB) ORGANIZADA POR CARPETAS
 // ==========================================
 
 function cargarJuegosAutomaticos() {
   const repoOwner = "Lucas2026apks"; 
   const repoName = "Room-gba";     
-  
-  // Cambia a ".jpg" si tus imágenes guardadas en GitHub usan esa extensión
   const extensionImagen = ".png"; 
   
-  // Lista de tus juegos (añadido Sonic Advance)
-  const misJuegos = [
-    "Tekken Advance (Europe).gba",
-    "Geometry_Dash.gba",
-    "Super Mario Bros. 3.gba",
-    "Metroid Fusion.gba",
-    "Sonic Advance (Europe).gba",
-    "Pac-Man.gba",
-    "Gradius Galaxies.gba",
-    "Crazy Taxi.gba",
-    "Mario vs Donkey Kong .gba",
-    "Doom.gba",
-    "Mega Man & Bass.gba",
-    "Metal Slug Advance.gba"
-  
+  // Categorías de juegos organizadas por carpetas virtuales
+  const categoriasJuegos = {
+    "super mario":[
+      "Super Mario Bros. 3.gba",
+      "Mario vs Donkey Kong .gba",
+      "Classic NES Series - Super Mario Bros.gba",
+      "Dr. Mario.gba",
+      "Mario & Luigi - Superstar Saga.gba",
+      "Mario Kart - Super Circuit.gba",
+      "Super Mario Advance 2 - Super Mario World.gba",
+      "Super Mario Advance 3 - Yoshi's Island .gba"
+    ],
+    " Sonic": [
+      "Sonic Advance (Europe).gba"
+      
+      ],
+      "Mega Man":[
+      "Mega Man & Bass.gba",
+    ],
+    " Acción y Clásicos": [
+      "Tekken Advance (Europe).gba",
+      "Geometry_Dash.gba",
+      "Metroid Fusion.gba",
+      "Pac-Man.gba",
+      "Gradius Galaxies.gba",
+      "Crazy Taxi.gba",
+      "Doom.gba",
+      "Metal Slug Advance.gba"
+    ],
     
-  ];
-
-  const contenedorLista = document.getElementById("game-list");
-  if (!contenedorLista) return;
-  contenedorLista.innerHTML = "";
-
-  if (misJuegos.length === 0) {
-    contenedorLista.innerHTML = "<p style='text-align:center; font-size:12px; color:#f87171;'>No hay juegos configurados.</p>";
-    return;
-  }
-
-  misJuegos.forEach(nombreArchivo => {
-    const nombreBonito = nombreArchivo.replace(".gba", "").replace(/[-_]/g, " ");
-    const romUrl = `https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@main/${encodeURIComponent(nombreArchivo)}`;
     
-    // Genera automáticamente la URL de la imagen en tu GitHub usando el nombre exacto del ROM
-    const nombreImagen = nombreArchivo.replace(".gba", extensionImagen);
-    const imagenUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/main/${encodeURIComponent(nombreImagen)}`;
+  };
 
-    const itemDiv = document.createElement("div");
-    itemDiv.className = "game-item";
-    itemDiv.innerHTML = `
-      <img src="${imagenUrl}" alt="Cover" class="game-cover" onerror="this.src='https://via.placeholder.com/60?text=GBA'">
-      <div class="game-info">
-        <span style="font-size: 13px; font-weight: bold; color: #fff; word-break: break-all;">🎮 ${nombreBonito}</span>
-        <div class="game-actions">
-          <button class="btn-test" data-rom-url="${romUrl}">Probar</button>
-          <button class="btn-download" data-download-url="${romUrl}" data-file-name="${nombreArchivo}">⬇️ Descargar</button>
+  const contenedorCategorias = document.getElementById("store-categories");
+  if (!contenedorCategorias) return;
+  contenedorCategorias.innerHTML = "";
+
+  for (const [nombreCategoria, listaArchivos] of Object.entries(categoriasJuegos)) {
+    // Contenedor visual para cada "carpeta"
+    const folderDiv = document.createElement("div");
+    folderDiv.style.marginBottom = "15px";
+    folderDiv.style.background = "#181f2c";
+    folderDiv.style.padding = "10px";
+    folderDiv.style.borderRadius = "8px";
+
+    // Título de la carpeta
+    const folderTitle = document.createElement("div");
+    folderTitle.innerHTML = `<span style="font-size: 14px; font-weight: bold; color: #f472b6;">📂 ${nombreCategoria} (${listaArchivos.length})</span>`;
+    folderDiv.appendChild(folderTitle);
+
+    // Contenedor interno de los juegos de la carpeta
+    const gamesInFolder = document.createElement("div");
+    gamesInFolder.style.marginTop = "8px";
+
+    listaArchivos.forEach(nombreArchivo => {
+      const nombreBonito = nombreArchivo.replace(".gba", "").replace(/[-_]/g, " ");
+      const romUrl = `https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@main/${encodeURIComponent(nombreArchivo)}`;
+      const nombreImagen = nombreArchivo.replace(".gba", extensionImagen);
+      const imagenUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/main/${encodeURIComponent(nombreImagen)}`;
+
+      const itemDiv = document.createElement("div");
+      itemDiv.className = "game-item";
+      itemDiv.innerHTML = `
+        <img src="${imagenUrl}" alt="Cover" class="game-cover" onerror="this.src='https://via.placeholder.com/60?text=GBA'">
+        <div class="game-info">
+          <span style="font-size: 13px; font-weight: bold; color: #fff; word-break: break-all;">🎮 ${nombreBonito}</span>
+          <div class="game-actions">
+            <button class="btn-test" data-rom-url="${romUrl}">Probar</button>
+            <button class="btn-download" data-download-url="${romUrl}" data-file-name="${nombreArchivo}">⬇️ Descargar</button>
+          </div>
         </div>
-      </div>
-    `;
+      `;
+      gamesInFolder.appendChild(itemDiv);
+    });
 
-    contenedorLista.appendChild(itemDiv);
-  });
+    folderDiv.appendChild(gamesInFolder);
+    contenedorCategorias.appendChild(folderDiv);
+  }
 
   activarBotonesDeJuego();
 }
 
 function activarBotonesDeJuego() {
-  // Botón "Probar" (Inicia el juego en el emulador web)
   document.querySelectorAll(".btn-test").forEach(button => {
     button.addEventListener("click", (e) => {
       const romUrl = e.target.getAttribute("data-rom-url");
@@ -224,7 +249,6 @@ function activarBotonesDeJuego() {
     });
   });
 
-  // Botón "⬇️ Descargar" (Descarga la ROM directamente para jugar offline)
   document.querySelectorAll(".btn-download").forEach(button => {
     button.addEventListener("click", (e) => {
       const downloadUrl = e.target.getAttribute("data-download-url");
