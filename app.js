@@ -18,11 +18,13 @@ const auth = getAuth(app);
 const storage = getStorage(app);
 const db = getFirestore(app);
 
+// Elementos DOM
 const authSection = document.getElementById("auth-section");
-const gameSection = document.getElementById("game-section");
 const storeSection = document.getElementById("store-section");
 const rankingSection = document.getElementById("ranking-section");
 const emulatorWrapper = document.getElementById("emulator-wrapper");
+const navMenu = document.getElementById("nav-menu");
+const userBadge = document.getElementById("user-badge");
 const userEmailDisplay = document.getElementById("user-email-display");
 const authError = document.getElementById("auth-error");
 
@@ -32,15 +34,16 @@ const btnLogin = document.getElementById("btn-login");
 const btnRegister = document.getElementById("btn-register");
 const btnLogout = document.getElementById("btn-logout");
 
-const btnGotoStore = document.getElementById("btn-goto-store");
+const navBtnEmu = document.getElementById("nav-btn-emu");
+const navBtnStore = document.getElementById("nav-btn-store");
+const navBtnRanking = document.getElementById("nav-btn-ranking");
 const btnGotoImport = document.getElementById("btn-goto-import");
-const btnBackStore = document.getElementById("btn-back-store");
 const romInput = document.getElementById("rom-input");
 
 const btnSaveCloud = document.getElementById("btn-save-cloud");
 const btnLoadCloud = document.getElementById("btn-load-cloud");
 
-// Referencias del Explorador de Carpetas
+// Explorador DOM
 const folderView = document.getElementById("folder-view");
 const folderContentView = document.getElementById("folder-content-view");
 const folderTitleDisplay = document.getElementById("folder-title-display");
@@ -50,9 +53,38 @@ const btnBackFolders = document.getElementById("btn-back-folders");
 let intervaloTiempo = null;
 
 // ==========================================
-// SECCIÓN DE AUTENTICACIÓN
+// CONTROL DE VISTAS (NAVEGACIÓN DASHBOARD)
 // ==========================================
+function switchView(viewName) {
+  storeSection.classList.add("hidden");
+  rankingSection.classList.add("hidden");
+  emulatorWrapper.classList.add("hidden");
 
+  navBtnEmu.classList.remove("active");
+  navBtnStore.classList.remove("active");
+  navBtnRanking.classList.remove("active");
+
+  if (viewName === "emu") {
+    emulatorWrapper.classList.remove("hidden");
+    navBtnEmu.classList.add("active");
+  } else if (viewName === "store") {
+    storeSection.classList.remove("hidden");
+    navBtnStore.classList.add("active");
+    cargarJuegosAutomaticos();
+  } else if (viewName === "ranking") {
+    rankingSection.classList.remove("hidden");
+    navBtnRanking.classList.add("active");
+    cargarTopGlobal();
+  }
+}
+
+navBtnEmu.addEventListener("click", () => switchView("emu"));
+navBtnStore.addEventListener("click", () => switchView("store"));
+navBtnRanking.addEventListener("click", () => switchView("ranking"));
+
+// ==========================================
+// AUTENTICACIÓN
+// ==========================================
 btnRegister.addEventListener("click", async () => {
   try {
     await createUserWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
@@ -67,7 +99,7 @@ btnLogin.addEventListener("click", async () => {
     await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
     authError.innerText = "";
   } catch (error) {
-    authError.innerText = "Error al iniciar sesión: Verifique sus datos.";
+    authError.innerText = "Error: Verifique sus credenciales.";
   }
 });
 
@@ -79,54 +111,29 @@ btnLogout.addEventListener("click", async () => {
 onAuthStateChanged(auth, (user) => {
   if (user) {
     authSection.classList.add("hidden");
-    gameSection.classList.remove("hidden");
-    rankingSection.classList.remove("hidden");
-    
-    storeSection.classList.add("hidden");
-    emulatorWrapper.classList.add("hidden");
-    
+    navMenu.classList.remove("hidden");
+    userBadge.classList.remove("hidden");
     userEmailDisplay.innerText = user.email;
-    cargarTopGlobal();
+    
+    switchView("store");
   } else {
     authSection.classList.remove("hidden");
-    gameSection.classList.add("hidden");
+    navMenu.classList.add("hidden");
+    userBadge.classList.add("hidden");
     storeSection.classList.add("hidden");
     rankingSection.classList.add("hidden");
     emulatorWrapper.classList.add("hidden");
+    
     emailInput.value = "";
     passwordInput.value = "";
-    
     if (intervaloTiempo) clearInterval(intervaloTiempo);
   }
 });
 
 // ==========================================
-// NAVEGACIÓN Y EXPLORADOR DE CARPETAS
+// IMPORTACIÓN Y EMULADOR
 // ==========================================
-
-btnGotoStore.addEventListener("click", () => {
-  gameSection.classList.add("hidden");
-  storeSection.classList.remove("hidden");
-  cargarJuegosAutomaticos();
-});
-
-btnBackStore.addEventListener("click", () => {
-  storeSection.classList.add("hidden");
-  gameSection.classList.remove("hidden");
-});
-
-btnBackFolders.addEventListener("click", () => {
-  folderContentView.classList.add("hidden");
-  folderView.classList.remove("hidden");
-});
-
-btnGotoImport.addEventListener("click", () => {
-  romInput.click();
-});
-
-// ==========================================
-// EMULADOR GBA (EmulatorJS)
-// ==========================================
+btnGotoImport.addEventListener("click", () => romInput.click());
 
 romInput.addEventListener("change", (evento) => {
   const archivo = evento.target.files[0];
@@ -137,7 +144,7 @@ romInput.addEventListener("change", (evento) => {
 });
 
 function iniciarEmulador(urlJuego) {
-  emulatorWrapper.classList.remove("hidden");
+  switchView("emu");
   document.getElementById("game").innerHTML = "";
 
   window.EJS_player = "#game";
@@ -156,9 +163,8 @@ function iniciarEmulador(urlJuego) {
 }
 
 // ==========================================
-// CARPETAS Y JUEGOS DESDE GITHUB
+// CARPETAS Y ARCHIVOS GITHUB
 // ==========================================
-
 function cargarJuegosAutomaticos() {
   const repoOwner = "Lucas2026apks"; 
   const repoName = "Room-gba";     
@@ -199,15 +205,13 @@ function cargarJuegosAutomaticos() {
 
   for (const [nombreCategoria, listaArchivos] of Object.entries(categoriasJuegos)) {
     const folderItem = document.createElement("div");
-    folderItem.className = "game-item";
-    folderItem.style.cursor = "pointer";
+    folderItem.className = "folder-card";
     folderItem.innerHTML = `
-      <div style="font-size: 26px; padding-left: 5px;">📁</div>
-      <div class="game-info">
-        <span style="font-size: 14px; font-weight: bold; color: #fff;">${nombreCategoria}</span>
-        <span style="font-size: 11px; color: #9ca3af;">${listaArchivos.length} elementos</span>
+      <div style="font-size: 28px;">📁</div>
+      <div>
+        <strong style="color: #fff; font-size: 14px; display:block;">${nombreCategoria}</strong>
+        <span style="font-size: 12px; color: var(--text-dim);">${listaArchivos.length} ROMs</span>
       </div>
-      <div style="color: #9ca3af; font-size: 14px; padding-right: 5px;">▶</div>
     `;
 
     folderItem.addEventListener("click", () => {
@@ -218,10 +222,15 @@ function cargarJuegosAutomaticos() {
   }
 }
 
+btnBackFolders.addEventListener("click", () => {
+  folderContentView.classList.add("hidden");
+  folderView.classList.remove("hidden");
+});
+
 function abrirCarpeta(nombreCategoria, listaArchivos, repoOwner, repoName, extensionImagen) {
   folderView.classList.add("hidden");
   folderContentView.classList.remove("hidden");
-  folderTitleDisplay.innerHTML = `📂 Carpeta: ${nombreCategoria} (${listaArchivos.length})`;
+  folderTitleDisplay.innerText = `Categoría: ${nombreCategoria} (${listaArchivos.length})`;
   gamesInFolderList.innerHTML = "";
 
   listaArchivos.forEach(nombreArchivo => {
@@ -235,11 +244,11 @@ function abrirCarpeta(nombreCategoria, listaArchivos, repoOwner, repoName, exten
     itemDiv.innerHTML = `
       <img src="${imagenUrl}" alt="Cover" class="game-cover" onerror="this.src='https://via.placeholder.com/60?text=GBA'">
       <div class="game-info">
-        <span style="font-size: 13px; font-weight: bold; color: #fff; word-break: break-all;">🎮 ${nombreBonito}</span>
-        <div class="game-actions">
-          <button class="btn-test" data-rom-url="${romUrl}">Probar</button>
-          <button class="btn-download" data-download-url="${romUrl}" data-file-name="${nombreArchivo}">⬇️ Descargar</button>
-        </div>
+        <span style="font-size: 14px; font-weight: bold; color: #fff;">${nombreBonito}</span>
+      </div>
+      <div class="game-actions">
+        <button class="btn btn-primary btn-test" data-rom-url="${romUrl}">▶ Jugar</button>
+        <button class="btn btn-outline btn-download" data-download-url="${romUrl}" data-file-name="${nombreArchivo}">⬇️</button>
       </div>
     `;
     gamesInFolderList.appendChild(itemDiv);
@@ -252,10 +261,7 @@ function activarBotonesDeJuego() {
   document.querySelectorAll(".btn-test").forEach(button => {
     button.addEventListener("click", (e) => {
       const romUrl = e.target.getAttribute("data-rom-url");
-      if (romUrl) {
-        storeSection.classList.add("hidden");
-        iniciarEmulador(romUrl);
-      }
+      if (romUrl) iniciarEmulador(romUrl);
     });
   });
 
@@ -275,15 +281,15 @@ function activarBotonesDeJuego() {
 }
 
 // ==========================================
-// CONTROL DE TIEMPO Y TOP GLOBAL (FIRESTORE)
+// REGISTRO DE TIEMPO FIRESTORE (OPTIMIZADO)
 // ==========================================
-
 function iniciarContadorTiempo(userId) {
   if (intervaloTiempo) clearInterval(intervaloTiempo);
 
+  // Actualización diferida cada 10 segundos en lugar de 1 segundo para no saturar Firestore
   intervaloTiempo = setInterval(async () => {
-    await guardarTiempoEnFirestore(userId, 1);
-  }, 1000);
+    await guardarTiempoEnFirestore(userId, 10);
+  }, 10000);
 }
 
 async function guardarTiempoEnFirestore(userId, segundosNuevos) {
@@ -295,18 +301,12 @@ async function guardarTiempoEnFirestore(userId, segundosNuevos) {
     let emailUser = auth.currentUser ? auth.currentUser.email : "Anónimo";
 
     if (userDoc.exists()) {
-      const data = userDoc.data();
-      tiempoTotal = (data.tiempoJugado || 0) + segundosNuevos;
+      tiempoTotal = (userDoc.data().tiempoJugado || 0) + segundosNuevos;
     }
 
-    await setDoc(userRef, {
-      email: emailUser,
-      tiempoJugado: tiempoTotal
-    }, { merge: true });
-
-    cargarTopGlobal();
+    await setDoc(userRef, { email: emailUser, tiempoJugado: tiempoTotal }, { merge: true });
   } catch (error) {
-    console.error("Error al actualizar el tiempo:", error);
+    console.error("Error tiempo:", error);
   }
 }
 
@@ -317,11 +317,10 @@ async function cargarTopGlobal() {
   try {
     const q = query(collection(db, "usuarios"), orderBy("tiempoJugado", "desc"), limit(10));
     const querySnapshot = await getDocs(q);
-
     rankingList.innerHTML = "";
 
     if (querySnapshot.empty) {
-      rankingList.innerHTML = "<p style='text-align:center; font-size:12px; color:#9ca3af;'>Aún no hay registros de tiempo.</p>";
+      rankingList.innerHTML = "<p style='text-align:center; font-size:12px; color:var(--text-dim);'>Sin registros de juego.</p>";
       return;
     }
 
@@ -331,76 +330,60 @@ async function cargarTopGlobal() {
       
       const horas = Math.floor(data.tiempoJugado / 3600);
       const minutos = Math.floor((data.tiempoJugado % 3600) / 60);
-      const segundos = data.tiempoJugado % 60;
 
       const itemDiv = document.createElement("div");
       itemDiv.className = "game-item";
       itemDiv.innerHTML = `
-        <span style="font-size: 13px; color: #cbd5e1;">👤 ${emailOculto}</span>
-        <span style="font-size: 13px; font-weight: bold; color: #4ade80;">⏱️ ${horas}h ${minutos}m ${segundos}s</span>
+        <span style="font-size: 13px; color: #fff; flex:1;">👤 ${emailOculto}</span>
+        <span style="font-size: 13px; font-weight: bold; color: #4ade80;">⏱️ ${horas}h ${minutos}m</span>
       `;
       rankingList.appendChild(itemDiv);
     });
-
   } catch (error) {
-    console.error("Error al cargar el top global:", error);
+    console.error("Error ranking:", error);
   }
 }
 
 // ==========================================
-// GUARDADO Y CARGA EN LA NUBE (.sav)
+// CLOUD SAVES (.SAV)
 // ==========================================
-
 btnSaveCloud.addEventListener("click", async () => {
   const user = auth.currentUser;
-  if (!user) {
-    alert("Debes iniciar sesión para guardar.");
-    return;
-  }
+  if (!user) return alert("Inicia sesión primero.");
 
   try {
     if (typeof window.EJS_getSave === "function") {
       window.EJS_getSave(async (saveData) => {
-        if (!saveData) {
-          alert("No hay datos de guardado activos todavía.");
-          return;
-        }
-
+        if (!saveData) return alert("No hay datos de guardado activos.");
         const storageRef = ref(storage, `saves/${user.uid}/partida.sav`);
         await uploadBytes(storageRef, saveData);
         alert("¡Partida guardada en la nube con éxito! 💾");
       });
     } else {
-      alert("El emulador aún no está listo o corriendo un juego.");
+      alert("Inicia una partida en el emulador primero.");
     }
   } catch (error) {
-    console.error(error);
     alert("Error al guardar: " + error.message);
   }
 });
 
 btnLoadCloud.addEventListener("click", async () => {
   const user = auth.currentUser;
-  if (!user) {
-    alert("Debes iniciar sesión para cargar.");
-    return;
-  }
+  if (!user) return alert("Inicia sesión primero.");
 
   try {
     const storageRef = ref(storage, `saves/${user.uid}/partida.sav`);
     const url = await getDownloadURL(storageRef);
-    
     const response = await fetch(url);
     const blob = await response.blob();
 
     if (typeof window.EJS_setSave === "function") {
       window.EJS_setSave(blob);
-      alert("¡Partida cargada desde la nube con éxito! ☁️");
+      alert("¡Partida cargada desde la nube! ☁️");
     } else {
-      alert("Inicia el emulador antes de cargar una partida.");
+      alert("Inicia el emulador antes de cargar la partida.");
     }
   } catch (error) {
-    console.error(error);
-    alert("No se encontró ninguna partida guardada previa en la nube.");
+    alert("No se encontró partida guardada en la nube.");
   }
 });
