@@ -12,27 +12,27 @@ const romInput = document.getElementById("rom-input");
 const btnSaveLocal = document.getElementById("btn-save-local");
 const btnLoadLocal = document.getElementById("btn-load-local");
 
-// Explorador DOM
 const folderView = document.getElementById("folder-view");
 const folderContentView = document.getElementById("folder-content-view");
 const folderTitleDisplay = document.getElementById("folder-title-display");
 const gamesInFolderList = document.getElementById("games-in-folder-list");
 const btnBackFolders = document.getElementById("btn-back-folders");
 
-// Multijugador DOM
 const btnCreateRoom = document.getElementById("btn-create-room");
 const btnJoinRoom = document.getElementById("btn-join-room");
 const hostInfo = document.getElementById("host-info");
 const myRoomCode = document.getElementById("my-room-code");
 const inputRoomCode = document.getElementById("input-room-code");
 const multiStatus = document.getElementById("multi-status");
+const playerRoleDisplay = document.getElementById("player-role-display");
 
 let romActualNombre = "partida_gba";
 let peer = null;
 let connection = null;
+let esHost = false;
 
 // ==========================================
-// CONTROL DE VISTAS (NAVEGACIÓN)
+// CONTROL DE VISTAS
 // ==========================================
 function switchView(viewName) {
   storeSection.classList.add("hidden");
@@ -82,50 +82,107 @@ function iniciarEmulador(urlJuego) {
   window.EJS_gameUrl = urlJuego;
   window.EJS_pathtodata = "https://raw.githack.com/EmulatorJS/EmulatorJS/main/data/";
 
+  // Controles predeterminados del Jugador 2 mapeados a teclas secundarias (Teclado)
+  window.EJS_settings = {
+    "player2_up": "KeyI",
+    "player2_down": "KeyK",
+    "player2_left": "KeyJ",
+    "player2_right": "KeyL",
+    "player2_a": "KeyO",
+    "player2_b": "KeyU",
+    "player2_select": "Digit8",
+    "player2_start": "Digit9"
+  };
+
   const script = document.createElement("script");
   script.src = "https://raw.githack.com/EmulatorJS/EmulatorJS/main/data/loader.js";
   document.body.appendChild(script);
 }
 
 // ==========================================
-// SISTEMA MULTIJUGADOR P2P (PeerJS)
+// SISTEMA MULTIJUGADOR P2P Y TRANSMISIÓN DE MANDOS
 // ==========================================
 btnCreateRoom.addEventListener("click", () => {
   multiStatus.textContent = "ESTADO: Creando sala...";
-  
   peer = new Peer();
+  esHost = true;
+  playerRoleDisplay.textContent = "ANFITRIÓN (J1)";
 
   peer.on("open", (id) => {
     hostInfo.classList.remove("hidden");
     myRoomCode.textContent = id;
-    multiStatus.textContent = "ESTADO: Esperando que el Jugador 2 se conecte...";
+    multiStatus.textContent = "ESTADO: Esperando al Jugador 2...";
   });
 
   peer.on("connection", (conn) => {
     connection = conn;
-    multiStatus.textContent = "ESTADO: ¡Jugador 2 Conectado exitosamente!";
-    alert("¡Un jugador se ha unido a tu sala! Selecciona una ROM en el explorador para empezar.");
+    multiStatus.textContent = "ESTADO: ¡Jugador 2 Conectado!";
+    alert("¡Jugador 2 conectado! Elige una ROM en el explorador para empezar a jugar.");
+    
+    // El host recibe las pulsaciones del Jugador 2 y las ejecuta en su pantalla
+    connection.on("data", (data) => {
+      if (data && data.type === "INPUT") {
+        const event = new KeyboardEvent(data.action, {
+          code: data.code,
+          key: data.key,
+          bubbles: true
+        });
+        document.dispatchEvent(event);
+      }
+    });
+
     switchView("store");
   });
 });
 
 btnJoinRoom.addEventListener("click", () => {
   const code = inputRoomCode.value.trim();
-  if (!code) return alert("Por favor ingresa un código de sala válido.");
+  if (!code) return alert("Ingresa un código válido.");
 
   multiStatus.textContent = "ESTADO: Conectando con la sala...";
   peer = new Peer();
+  esHost = false;
+  playerRoleDisplay.textContent = "INVITADO (J2)";
 
   peer.on("open", () => {
     connection = peer.connect(code);
 
     connection.on("open", () => {
       multiStatus.textContent = "ESTADO: ¡Conectado al Anfitrión!";
-      alert("¡Conexión establecida! El Anfitrión seleccionará el juego.");
-      switchView("store");
+      alert("Conexión realizada. Tus teclas (I, K, J, L para moverte; U, O para A/B) controlarán al Jugador 2.");
+      
+      // El cliente intercepta sus teclas y se las transmite en tiempo real al Host
+      registrarControlesInvitado();
     });
   });
 });
+
+function registrarControlesInvitado() {
+  const mapaTeclasJ2 = {
+    "ArrowUp": "KeyI",
+    "ArrowDown": "KeyK",
+    "ArrowLeft": "KeyJ",
+    "ArrowRight": "KeyL",
+    "KeyZ": "KeyO",
+    "KeyX": "KeyU",
+    "Enter": "Digit9",
+    "ShiftRight": "Digit8"
+  };
+
+  const enviarInput = (tipo, e) => {
+    if (!connection) return;
+    const codigoMapeado = mapaTeclasJ2[e.code] || e.code;
+    connection.send({
+      type: "INPUT",
+      action: tipo,
+      code: codigoMapeado,
+      key: e.key
+    });
+  };
+
+  window.addEventListener("keydown", (e) => enviarInput("keydown", e));
+  window.addEventListener("keyup", (e) => enviarInput("keyup", e));
+}
 
 // ==========================================
 // CARPETAS Y ARCHIVOS GITHUB
