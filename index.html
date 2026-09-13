@@ -3,11 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GBA Cyber Studio - Netplay & Room List</title>
+  <title>GBA Cyber Studio</title>
   <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/Lucas2026apks/Room-gba/main/logo.png">
-  
-  <!-- PeerJS para conectar los dispositivos y sincronizar apodos -->
-  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
   <style>
     :root {
@@ -16,9 +13,7 @@
       --bg-card: #0b0c10;
       --neon-cyan: #45f3ff;
       --neon-purple: #c5a1ff;
-      --neon-green: #2ecc71;
       --text-main: #66fcf1;
-      --text-dim: #c5a1ff;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
     body { background-color: var(--bg-dark); color: var(--text-main); display: flex; min-height: 100vh; overflow-x: hidden; }
@@ -26,7 +21,7 @@
 
     /* LAYOUT PRINCIPAL */
     aside {
-      width: 290px;
+      width: 280px;
       background-color: var(--bg-panel);
       border-right: 2px solid var(--neon-cyan);
       box-shadow: 5px 0 20px rgba(69, 243, 255, 0.2);
@@ -39,16 +34,6 @@
     .brand { display: flex; align-items: center; gap: 12px; }
     .brand img { width: 36px; height: 36px; filter: drop-shadow(0 0 8px var(--neon-cyan)); }
     .brand h2 { font-size: 1.1rem; color: #fff; text-shadow: 0 0 10px var(--neon-cyan); letter-spacing: 1px; }
-    
-    .user-badge {
-      background: var(--bg-dark);
-      border: 1px solid var(--neon-purple);
-      padding: 10px;
-      border-radius: 8px;
-      font-size: 12px;
-      color: var(--neon-purple);
-      word-break: break-all;
-    }
 
     nav { display: flex; flex-direction: column; gap: 10px; }
     .nav-btn {
@@ -101,18 +86,6 @@
     .btn-outline { background: var(--bg-dark); border: 1px solid var(--neon-purple); color: var(--neon-purple); }
     .btn-outline:hover { border-color: var(--neon-cyan); color: var(--neon-cyan); }
 
-    .input-field {
-      background: var(--bg-dark);
-      border: 1px solid var(--neon-purple);
-      color: #fff;
-      padding: 10px;
-      border-radius: 6px;
-      width: 100%;
-      margin-top: 5px;
-      margin-bottom: 12px;
-      font-size: 0.9rem;
-    }
-
     /* EXPLORADOR DE ROMS Y CARPETAS */
     .grid-folders {
       display: grid;
@@ -158,40 +131,6 @@
     .game-info { flex: 1; }
     .game-actions { display: flex; gap: 8px; }
 
-    /* LISTA DE USUARIOS EN SALA */
-    .user-list-box {
-      background: var(--bg-dark);
-      border: 1px solid var(--neon-cyan);
-      border-radius: 8px;
-      padding: 15px;
-      margin-top: 15px;
-    }
-    .user-list {
-      list-style: none;
-      margin-top: 10px;
-    }
-    .user-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 12px;
-      background: rgba(255, 255, 255, 0.03);
-      border-radius: 6px;
-      margin-bottom: 6px;
-      border: 1px solid rgba(197, 161, 255, 0.2);
-    }
-    .user-status {
-      font-size: 11px;
-      padding: 3px 8px;
-      border-radius: 4px;
-      background: var(--neon-green);
-      color: #000;
-      font-weight: bold;
-    }
-    .user-status.host {
-      background: var(--neon-cyan);
-    }
-
     /* CONTENEDOR EMULADOR */
     #emulator-wrapper { width: 100%; max-width: 800px; display: flex; flex-direction: column; align-items: center; }
     #game {
@@ -228,15 +167,9 @@
       <h2>GBA CYBER STUDIO</h2>
     </div>
 
-    <div class="user-badge">
-      <div style="font-weight: bold; color: var(--neon-cyan); margin-bottom: 4px;">CÓDIGO DE TU SALA:</div>
-      <span id="my-peer-id">Generando...</span>
-    </div>
-
     <nav>
       <button id="nav-btn-store" class="nav-btn active">⚡ EXPLORADOR ROMS</button>
       <button id="nav-btn-emu" class="nav-btn nav-btn-secondary">🎮 EMULADOR</button>
-      <button id="nav-btn-multi" class="nav-btn nav-btn-secondary">👥 SALA Y USUARIOS</button>
       <button id="btn-goto-import" class="nav-btn nav-btn-secondary">📁 IMPORTAR .GBA</button>
       <input type="file" id="rom-input" accept=".gba" style="display: none;">
     </nav>
@@ -255,29 +188,6 @@
         <button id="btn-back-folders" class="btn btn-outline" style="margin-bottom: 15px;">⬅️ VOLVER A CATEGORÍAS</button>
         <h4 id="folder-title-display" style="color: var(--neon-cyan); margin-bottom: 15px; text-shadow: 0 0 8px var(--neon-cyan);"></h4>
         <div id="games-in-folder-list"></div>
-      </div>
-    </div>
-
-    <!-- PANEL MULTIJUGADOR Y LISTA DE USUARIOS -->
-    <div id="multiplayer-section" class="container-panel hidden">
-      <h3 style="color: #fff; margin-bottom: 15px; text-shadow: 0 0 10px var(--neon-cyan);">👥 GESTIÓN DE SALA Y MOTE/APODO</h3>
-      
-      <div style="margin-bottom: 20px; background: var(--bg-card); padding: 15px; border-radius: 8px; border: 1px solid var(--neon-purple);">
-        <label style="font-size: 12px; color: var(--neon-purple); font-weight: bold;">1. TU MOTE / APODO:</label>
-        <input type="text" id="input-username" class="input-field" placeholder="Ej: Jugador1">
-        
-        <label style="font-size: 12px; color: var(--neon-purple); font-weight: bold;">2. UNIRSE A LA SALA DE UN AMIGO (PEGAR CÓDIGO):</label>
-        <input type="text" id="input-target-peer" class="input-field" placeholder="Pega el código de la sala de tu amigo aquí">
-        
-        <button id="btn-connect-peer" class="btn btn-green">UNIRSE A LA SALA</button>
-      </div>
-
-      <!-- LISTA DE USUARIOS UNIDOS -->
-      <div class="user-list-box">
-        <h4 style="color: var(--neon-cyan);">📋 USUARIOS UNIDOS EN ESTA SALA:</h4>
-        <ul id="users-connected-list" class="user-list">
-          <!-- Se actualiza dinámicamente -->
-        </ul>
       </div>
     </div>
 
