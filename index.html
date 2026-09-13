@@ -3,33 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Game Boy Advance Cloud Studio</title>
-  
-  <!-- Logo de la pestaña -->
+  <title>Game Boy Advance Cyber Studio</title>
   <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/Lucas2026apks/Room-gba/main/logo.png">
+  
+  <!-- Librería PeerJS para conexión P2P mediante ID/IP Virtual -->
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
   <style>
     :root {
-      --bg-dark: #0d1117;
-      --bg-panel: #161b22;
-      --bg-card: #21262d;
-      --accent: #6c5ce7;
-      --accent-hover: #818cf8;
-      --text-main: #f0f6fc;
-      --text-dim: #8b949e;
-      --border: #30363d;
-      --green: #238636;
-      --red: #da3633;
-      --yellow: #d29922;
+      --bg-dark: #0b0c10;
+      --bg-panel: #1f2833;
+      --bg-card: #0b0c10;
+      --neon-cyan: #45f3ff;
+      --neon-purple: #c5a1ff;
+      --neon-red: #ff455b;
+      --text-main: #66fcf1;
+      --text-dim: #c5a1ff;
+      --border: #45f3ff;
     }
-
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: 'Segoe UI', BlinkMacSystemFont, Roboto, sans-serif;
     }
-
     body {
       background-color: var(--bg-dark);
       color: var(--text-main);
@@ -37,75 +34,84 @@
       min-height: 100vh;
       overflow-x: hidden;
     }
-
     .hidden { display: none !important; }
-
+         
     /* LAYOUT PRINCIPAL */
     aside {
       width: 280px;
       background-color: var(--bg-panel);
-      border-right: 1px solid var(--border);
+      border-right: 2px solid var(--neon-cyan);
+      box-shadow: 5px 0 20px rgba(69, 243, 255, 0.2);
       display: flex;
       flex-direction: column;
       padding: 20px;
       gap: 20px;
       flex-shrink: 0;
     }
-
     .brand {
       display: flex;
       align-items: center;
       gap: 12px;
     }
-
     .brand img {
-      width: 32px;
-      height: 32px;
+      width: 36px;
+      height: 36px;
+      filter: drop-shadow(0 0 8px var(--neon-cyan));
     }
-
     .brand h2 {
       font-size: 1.1rem;
-      color: var(--text-main);
+      color: #fff;
+      text-shadow: 0 0 10px var(--neon-cyan);
       font-weight: 700;
+      letter-spacing: 1px;
     }
-
     .user-badge {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
+      background: var(--bg-dark);
+      border: 1px solid var(--neon-purple);
       padding: 10px 12px;
       border-radius: 8px;
       font-size: 12px;
-      color: var(--text-dim);
-      word-break: break-all;
+      color: var(--neon-purple);
+      box-shadow: inset 0 0 8px rgba(197, 161, 255, 0.2);
     }
-
     nav {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
     }
-
     .nav-btn {
-      background: transparent;
-      color: var(--text-dim);
+      background: var(--neon-cyan);
+      color: var(--bg-dark);
       border: none;
       padding: 12px;
       border-radius: 8px;
       text-align: left;
       font-size: 0.9rem;
-      font-weight: 600;
+      font-weight: bold;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 10px;
-      transition: all 0.2s ease;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(69, 243, 255, 0.3);
     }
-
     .nav-btn:hover, .nav-btn.active {
-      background-color: var(--accent);
-      color: #fff;
+      background: var(--bg-panel);
+      color: var(--neon-cyan);
+      border: 2px solid var(--neon-cyan);
+      box-shadow: 0 0 15px rgba(69, 243, 255, 0.6);
     }
-
+    .nav-btn-secondary {
+      background: var(--neon-purple);
+      color: var(--bg-dark);
+      box-shadow: 0 4px 15px rgba(197, 161, 255, 0.3);
+    }
+    .nav-btn-secondary:hover {
+      background: var(--bg-panel);
+      color: var(--neon-purple);
+      border: 2px solid var(--neon-purple);
+      box-shadow: 0 0 15px rgba(197, 161, 255, 0.6);
+    }
     main {
       flex: 1;
       padding: 25px;
@@ -114,56 +120,61 @@
       align-items: center;
       overflow-y: auto;
     }
-
     .container-panel {
       width: 100%;
       max-width: 900px;
       background-color: var(--bg-panel);
-      border: 1px solid var(--border);
+      border: 2px solid var(--neon-cyan);
       border-radius: 12px;
       padding: 25px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      box-shadow: 0px 0px 25px rgba(69, 243, 255, 0.3);
     }
-
-    /* CONTROLES Y FORMULARIO */
-    input[type="email"], input[type="password"] {
-      width: 100%;
-      padding: 12px;
-      margin: 8px 0 16px;
-      background: var(--bg-dark);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: #fff;
-      outline: none;
-    }
-
-    input:focus {
-      border-color: var(--accent);
-    }
-
     .btn {
-      padding: 10px 16px;
-      border-radius: 6px;
+      padding: 12px 18px;
+      border-radius: 8px;
       border: none;
-      font-weight: 600;
+      font-weight: bold;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
       font-size: 0.9rem;
-      transition: opacity 0.2s;
+      transition: all 0.3s ease;
     }
-
-    .btn:hover { opacity: 0.9; }
-
-    .btn-block { width: 100%; margin-bottom: 10px; }
-    .btn-primary { background-color: var(--accent); color: #fff; }
-    .btn-green { background-color: var(--green); color: #fff; }
-    .btn-yellow { background-color: var(--yellow); color: #000; }
-    .btn-red { background-color: var(--red); color: #fff; }
-    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-dim); }
-
+    .btn-green {
+      background-color: var(--neon-cyan);
+      color: var(--bg-dark);
+      box-shadow: 0 4px 15px rgba(69, 243, 255, 0.3);
+    }
+    .btn-green:hover {
+      background-color: var(--bg-panel);
+      color: var(--neon-cyan);
+      border: 2px solid var(--neon-cyan);
+      box-shadow: 0 0 15px rgba(69, 243, 255, 0.6);
+    }
+    .btn-yellow {
+      background-color: var(--neon-purple);
+      color: var(--bg-dark);
+      box-shadow: 0 4px 15px rgba(197, 161, 255, 0.3);
+    }
+    .btn-yellow:hover {
+      background-color: var(--bg-panel);
+      color: var(--neon-purple);
+      border: 2px solid var(--neon-purple);
+      box-shadow: 0 0 15px rgba(197, 161, 255, 0.6);
+    }
+    .btn-outline {
+      background: var(--bg-dark);
+      border: 1px solid var(--neon-purple);
+      color: var(--neon-purple);
+    }
+    .btn-outline:hover {
+      border-color: var(--neon-cyan);
+      color: var(--neon-cyan);
+      box-shadow: 0 0 10px rgba(69, 243, 255, 0.5);
+    }
+    
     /* TARJETAS DE ARCHIVOS / JUEGOS */
     .grid-folders {
       display: grid;
@@ -171,50 +182,43 @@
       gap: 15px;
       margin-top: 15px;
     }
-
     .folder-card {
       background: var(--bg-card);
-      border: 1px solid var(--border);
+      border: 2px dashed var(--neon-cyan);
       padding: 15px;
       border-radius: 8px;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 12px;
-      transition: border-color 0.2s;
+      transition: all 0.3s ease;
     }
-
     .folder-card:hover {
-      border-color: var(--accent);
+      border-style: solid;
+      box-shadow: 0 0 15px rgba(69, 243, 255, 0.6);
+      transform: translateY(-2px);
     }
-
     .game-item {
       display: flex;
       align-items: center;
       background: var(--bg-card);
-      border: 1px solid var(--border);
+      border: 1px solid rgba(69, 243, 255, 0.3);
       padding: 12px;
       border-radius: 8px;
       margin-top: 10px;
       gap: 15px;
     }
-
     .game-cover {
       width: 55px;
       height: 55px;
       object-fit: cover;
       border-radius: 6px;
       background: var(--bg-dark);
+      border: 1px solid var(--neon-cyan);
+      box-shadow: 0 0 8px var(--neon-cyan);
     }
-
-    .game-info {
-      flex: 1;
-    }
-
-    .game-actions {
-      display: flex;
-      gap: 8px;
-    }
+    .game-info { flex: 1; }
+    .game-actions { display: flex; gap: 8px; }
 
     /* CONTENEDOR DEL EMULADOR */
     #emulator-wrapper {
@@ -224,111 +228,134 @@
       flex-direction: column;
       align-items: center;
     }
-
     #game {
       width: 100%;
       aspect-ratio: 3 / 2;
       max-height: 500px;
       background: #000;
-      border-radius: 8px;
+      border-radius: 12px;
       overflow: hidden;
-      border: 2px solid var(--border);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      border: 2px solid var(--neon-cyan);
+      box-shadow: 0 0 25px rgba(69, 243, 255, 0.5);
     }
-
     .emulator-controls {
       display: flex;
-      gap: 10px;
-      margin-top: 15px;
+      gap: 15px;
+      margin-top: 20px;
       width: 100%;
       justify-content: center;
     }
 
+    /* ESTILOS PANEL MULTIJUGADOR */
+    .multiplayer-box {
+      background: var(--bg-card);
+      border: 1px solid var(--neon-cyan);
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .input-field {
+      background: var(--bg-dark);
+      border: 1px solid var(--neon-purple);
+      color: #fff;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      width: 100%;
+    }
+    .room-badge {
+      font-size: 1.1rem;
+      background: var(--bg-dark);
+      border: 1px dashed var(--neon-cyan);
+      padding: 10px;
+      border-radius: 6px;
+      color: var(--neon-cyan);
+      text-align: center;
+      letter-spacing: 2px;
+      font-weight: bold;
+    }
+
     @media (max-width: 768px) {
       body { flex-direction: column; }
-      aside { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
+      aside { width: 100%; border-right: none; border-bottom: 2px solid var(--neon-cyan); }
       main { padding: 15px; }
     }
   </style>
 </head>
 <body>
-
   <!-- BARRA LATERAL / NAVEGACIÓN -->
   <aside>
     <div class="brand">
       <img src="https://raw.githubusercontent.com/Lucas2026apks/Room-gba/main/logo.png" alt="GBA Logo">
-      <h2>GBA Cloud Player</h2>
+      <h2>GBA CYBER STUDIO</h2>
     </div>
-
-    <div id="user-badge" class="user-badge hidden">
-      <span>👤 <strong id="user-email-display"></strong></span>
+    <div id="user-badge" class="user-badge">
+      <span>SISTEMA: <b>MODO LOCAL</b></span>
     </div>
-
-    <nav id="nav-menu" class="hidden">
-      <button id="nav-btn-emu" class="nav-btn active">🎮 Emulador</button>
-      <button id="nav-btn-store" class="nav-btn">📂 Explorador ROMs</button>
-      <button id="nav-btn-ranking" class="nav-btn">🏆 Top Global</button>
-      <button id="btn-goto-import" class="nav-btn">📥 Importar .GBA</button>
+    <nav id="nav-menu">
+      <button id="nav-btn-store" class="nav-btn active">⚡ EXPLORADOR ROMS</button>
+      <button id="nav-btn-emu" class="nav-btn nav-btn-secondary">🎮 EMULADOR</button>
+      <button id="nav-btn-multi" class="nav-btn nav-btn-secondary">🌐 MULTIJUGADOR IP</button>
+      <button id="btn-goto-import" class="nav-btn nav-btn-secondary">📁 IMPORTAR .GBA</button>
       <input type="file" id="rom-input" accept=".gba" style="display: none;">
-      <button id="btn-logout" class="nav-btn btn-red" style="margin-top: 20px;">🚪 Cerrar Sesión</button>
     </nav>
   </aside>
 
   <!-- CONTENIDO PRINCIPAL -->
   <main>
-
-    <!-- SECCIÓN: AUTENTICACIÓN -->
-    <div id="auth-section" class="container-panel" style="max-width: 400px;">
-      <h3 style="text-align: center; margin-bottom: 10px;">Acceso al Sistema</h3>
-      <p style="text-align: center; font-size: 13px; color: var(--text-dim); margin-bottom: 20px;">
-        Inicia sesión para jugar y sincronizar partidas en la nube.
-      </p>
-
-      <input type="email" id="email-input" placeholder="Correo electrónico">
-      <input type="password" id="password-input" placeholder="Contraseña">
-
-      <button id="btn-login" class="btn btn-primary btn-block">Iniciar Sesión</button>
-      <button id="btn-register" class="btn btn-outline btn-block">Crear Cuenta</button>
-
-      <p id="auth-error" style="color: var(--red); text-align: center; font-size: 13px; margin-top: 10px;"></p>
-    </div>
-
     <!-- SECCIÓN: EXPLORADOR DE ARCHIVOS / ROMS -->
-    <div id="store-section" class="container-panel hidden">
-      <h3 style="margin-bottom: 5px;">📂 Explorador de ROMs</h3>
-      <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 20px;">Selecciona una categoría de juegos disponible en el servidor:</p>
-
+    <div id="store-section" class="container-panel">
+      <h3 style="margin-bottom: 5px; color: #fff; text-shadow: 0 0 10px var(--neon-cyan);">⚡ EXPLORADOR DE ROMS</h3>
+      <p style="font-size: 13px; color: var(--neon-purple); margin-bottom: 20px;">SELECCIONA UNA CATEGORÍA DE JUEGOS DISPONIBLE:</p>
+             
       <!-- Vista 1: Carpetas -->
       <div id="folder-view" class="grid-folders"></div>
-
+             
       <!-- Vista 2: Contenido de la Carpeta -->
       <div id="folder-content-view" class="hidden">
-        <button id="btn-back-folders" class="btn btn-outline" style="margin-bottom: 15px;">⬅️ Volver a Categorías</button>
-        <h4 id="folder-title-display" style="color: var(--accent-hover); margin-bottom: 15px;"></h4>
+        <button id="btn-back-folders" class="btn btn-outline" style="margin-bottom: 15px;">⬅️ VOLVER A CATEGORÍAS</button>
+        <h4 id="folder-title-display" style="color: var(--neon-cyan); margin-bottom: 15px; text-shadow: 0 0 8px var(--neon-cyan);"></h4>
         <div id="games-in-folder-list"></div>
       </div>
     </div>
 
-    <!-- SECCIÓN: TOP GLOBAL -->
-    <div id="ranking-section" class="container-panel hidden" style="max-width: 500px;">
-      <h3 style="margin-bottom: 5px;">🏆 Top Global de Jugadores</h3>
-      <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 15px;">Tiempo total registrado en el emulador:</p>
-      <div id="ranking-list"></div>
+    <!-- SECCIÓN: PANEL MULTIJUGADOR -->
+    <div id="multiplayer-section" class="container-panel hidden">
+      <h3 style="margin-bottom: 5px; color: #fff; text-shadow: 0 0 10px var(--neon-cyan);">🌐 SALAS MULTIJUGADOR (P2P / IP VIRTUAL)</h3>
+      <p style="font-size: 13px; color: var(--neon-purple); margin-bottom: 15px;">Conéctate con amigos en distintas redes WiFi mediante un código de sala asignado.</p>
+
+      <div class="multiplayer-box">
+        <h4>1. ANFITRIÓN (Crear Sala)</h4>
+        <button id="btn-create-room" class="btn btn-green">⚡ CREAR NUEVA SALA</button>
+        <div id="host-info" class="hidden">
+          <p style="font-size: 12px; color: #fff; margin-top: 10px;">Pásale este código/IP virtual a tu amigo:</p>
+          <div id="my-room-code" class="room-badge">GENERANDO...</div>
+        </div>
+      </div>
+
+      <div class="multiplayer-box">
+        <h4>2. INVITADO (Unirse a una Sala)</h4>
+        <input type="text" id="input-room-code" class="input-field" placeholder="Pega aquí la IP/Código del Anfitrión">
+        <button id="btn-join-room" class="btn btn-yellow">🎮 CONECTAR Y JUGAR</button>
+      </div>
+
+      <div id="multi-status" style="margin-top: 15px; font-weight: bold; color: var(--neon-cyan);">ESTADO: Desconectado</div>
     </div>
 
     <!-- SECCIÓN: EMULADOR GBA -->
     <div id="emulator-wrapper" class="hidden">
       <div id="game"></div>
-
       <!-- Panel de Control de Guardado -->
       <div class="emulator-controls">
-        <button id="btn-save-cloud" class="btn btn-green">💾 Guardar en Nube</button>
-        <button id="btn-load-cloud" class="btn btn-yellow">☁️ Cargar de Nube</button>
+        <button id="btn-save-local" class="btn btn-green">💾 GUARDAR PARTIDA LOCAL</button>
+        <button id="btn-load-local" class="btn btn-yellow">📂 CARGAR PARTIDA LOCAL</button>
       </div>
     </div>
-
   </main>
 
-  <script type="module" src="./app.js"></script>
+  <script src="./app.js"></script>
 </body>
   </html>
