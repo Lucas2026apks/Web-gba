@@ -5,9 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Game Boy Advance Cyber Studio</title>
   <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/Lucas2026apks/Room-gba/main/logo.png">
-  
-  <!-- PeerJS para conexión de controles P2P -->
-  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
   <style>
     :root {
@@ -290,12 +287,12 @@
       <h2>GBA CYBER STUDIO</h2>
     </div>
     <div id="user-badge" class="user-badge">
-      <span>SISTEMA: <b id="player-role-display">LOCAL</b></span>
+      <span>MODO NETPLAY: <b id="netplay-mode-badge">DESACTIVADO</b></span>
     </div>
     <nav id="nav-menu">
       <button id="nav-btn-store" class="nav-btn active">⚡ EXPLORADOR ROMS</button>
       <button id="nav-btn-emu" class="nav-btn nav-btn-secondary">🎮 EMULADOR</button>
-      <button id="nav-btn-multi" class="nav-btn nav-btn-secondary">🌐 MULTIJUGADOR IP</button>
+      <button id="nav-btn-multi" class="nav-btn nav-btn-secondary">🌐 SALA NETPLAY</button>
       <button id="btn-goto-import" class="nav-btn nav-btn-secondary">📁 IMPORTAR .GBA</button>
       <input type="file" id="rom-input" accept=".gba" style="display: none;">
     </nav>
@@ -317,27 +314,24 @@
       </div>
     </div>
 
-    <!-- PANEL MULTIJUGADOR -->
+    <!-- PANEL MULTIJUGADOR NETPLAY -->
     <div id="multiplayer-section" class="container-panel hidden">
-      <h3 style="margin-bottom: 5px; color: #fff; text-shadow: 0 0 10px var(--neon-cyan);">🌐 SALAS MULTIJUGADOR (P2P EN TIEMPO REAL)</h3>
-      <p style="font-size: 13px; color: var(--neon-purple); margin-bottom: 15px;">El Jugador 1 (Anfitrión) crea la sala y abre la ROM. El Jugador 2 transmite las pulsaciones de su control a la pantalla.</p>
+      <h3 style="margin-bottom: 5px; color: #fff; text-shadow: 0 0 10px var(--neon-cyan);">🌐 SALAS NETPLAY (MULTIJUGADOR 2 DISPOSITIVOS)</h3>
+      <p style="font-size: 13px; color: var(--neon-purple); margin-bottom: 15px;">Ambos dispositivos deben ingresar la misma clave/código de sala y abrir el mismo juego.</p>
 
       <div class="multiplayer-box">
-        <h4>1. ANFITRIÓN (Jugador 1)</h4>
-        <button id="btn-create-room" class="btn btn-green">⚡ CREAR NUEVA SALA</button>
-        <div id="host-info" class="hidden">
-          <p style="font-size: 12px; color: #fff; margin-top: 10px;">Pásale este código a tu amigo:</p>
-          <div id="my-room-code" class="room-badge">GENERANDO...</div>
-        </div>
+        <h4>1. CONFIGURAR O UNIRSE A SALA</h4>
+        <input type="text" id="input-room-code" class="input-field" placeholder="Escribe un nombre o código para la sala (Ej: Tekken123)">
+        <button id="btn-activate-netplay" class="btn btn-green">⚡ ACTIVAR NETPLAY CON ESTA SALA</button>
       </div>
 
       <div class="multiplayer-box">
-        <h4>2. INVITADO (Jugador 2)</h4>
-        <input type="text" id="input-room-code" class="input-field" placeholder="Pega aquí el código del Anfitrión">
-        <button id="btn-join-room" class="btn btn-yellow">🎮 CONECTAR Y UNIRSE</button>
+        <h4>2. SERVIDOR NETPLAY (AVANZADO)</h4>
+        <input type="text" id="input-server-url" class="input-field" value="wss://netplay.emulatorjs.org">
+        <span style="font-size: 11px; color: var(--text-dim);">Servidor WebSocket predeterminado de EmulatorJS.</span>
       </div>
 
-      <div id="multi-status" style="margin-top: 15px; font-weight: bold; color: var(--neon-cyan);">ESTADO: Desconectado</div>
+      <div id="multi-status" style="margin-top: 15px; font-weight: bold; color: var(--neon-cyan);">ESTADO: Modo Individual</div>
     </div>
 
     <!-- EMULADOR GBA -->
@@ -352,4 +346,4 @@
 
   <script src="./app.js"></script>
 </body>
-  </html>
+</html>
