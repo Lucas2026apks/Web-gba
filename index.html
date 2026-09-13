@@ -6,7 +6,7 @@
   <title>Game Boy Advance Cyber Studio</title>
   <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/Lucas2026apks/Room-gba/main/logo.png">
   
-  <!-- Librería PeerJS para conexión P2P mediante ID/IP Virtual -->
+  <!-- PeerJS para conexión de controles P2P -->
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
   <style>
@@ -174,8 +174,7 @@
       color: var(--neon-cyan);
       box-shadow: 0 0 10px rgba(69, 243, 255, 0.5);
     }
-    
-    /* TARJETAS DE ARCHIVOS / JUEGOS */
+
     .grid-folders {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -220,7 +219,6 @@
     .game-info { flex: 1; }
     .game-actions { display: flex; gap: 8px; }
 
-    /* CONTENEDOR DEL EMULADOR */
     #emulator-wrapper {
       width: 100%;
       max-width: 800px;
@@ -246,7 +244,6 @@
       justify-content: center;
     }
 
-    /* ESTILOS PANEL MULTIJUGADOR */
     .multiplayer-box {
       background: var(--bg-card);
       border: 1px solid var(--neon-cyan);
@@ -286,14 +283,14 @@
   </style>
 </head>
 <body>
-  <!-- BARRA LATERAL / NAVEGACIÓN -->
+  <!-- BARRA LATERAL -->
   <aside>
     <div class="brand">
       <img src="https://raw.githubusercontent.com/Lucas2026apks/Room-gba/main/logo.png" alt="GBA Logo">
       <h2>GBA CYBER STUDIO</h2>
     </div>
     <div id="user-badge" class="user-badge">
-      <span>SISTEMA: <b>MODO LOCAL</b></span>
+      <span>SISTEMA: <b id="player-role-display">LOCAL</b></span>
     </div>
     <nav id="nav-menu">
       <button id="nav-btn-store" class="nav-btn active">⚡ EXPLORADOR ROMS</button>
@@ -306,15 +303,13 @@
 
   <!-- CONTENIDO PRINCIPAL -->
   <main>
-    <!-- SECCIÓN: EXPLORADOR DE ARCHIVOS / ROMS -->
+    <!-- EXPLORADOR DE ROMS -->
     <div id="store-section" class="container-panel">
       <h3 style="margin-bottom: 5px; color: #fff; text-shadow: 0 0 10px var(--neon-cyan);">⚡ EXPLORADOR DE ROMS</h3>
       <p style="font-size: 13px; color: var(--neon-purple); margin-bottom: 20px;">SELECCIONA UNA CATEGORÍA DE JUEGOS DISPONIBLE:</p>
              
-      <!-- Vista 1: Carpetas -->
       <div id="folder-view" class="grid-folders"></div>
              
-      <!-- Vista 2: Contenido de la Carpeta -->
       <div id="folder-content-view" class="hidden">
         <button id="btn-back-folders" class="btn btn-outline" style="margin-bottom: 15px;">⬅️ VOLVER A CATEGORÍAS</button>
         <h4 id="folder-title-display" style="color: var(--neon-cyan); margin-bottom: 15px; text-shadow: 0 0 8px var(--neon-cyan);"></h4>
@@ -322,33 +317,32 @@
       </div>
     </div>
 
-    <!-- SECCIÓN: PANEL MULTIJUGADOR -->
+    <!-- PANEL MULTIJUGADOR -->
     <div id="multiplayer-section" class="container-panel hidden">
-      <h3 style="margin-bottom: 5px; color: #fff; text-shadow: 0 0 10px var(--neon-cyan);">🌐 SALAS MULTIJUGADOR (P2P / IP VIRTUAL)</h3>
-      <p style="font-size: 13px; color: var(--neon-purple); margin-bottom: 15px;">Conéctate con amigos en distintas redes WiFi mediante un código de sala asignado.</p>
+      <h3 style="margin-bottom: 5px; color: #fff; text-shadow: 0 0 10px var(--neon-cyan);">🌐 SALAS MULTIJUGADOR (P2P EN TIEMPO REAL)</h3>
+      <p style="font-size: 13px; color: var(--neon-purple); margin-bottom: 15px;">El Jugador 1 (Anfitrión) crea la sala y abre la ROM. El Jugador 2 transmite las pulsaciones de su control a la pantalla.</p>
 
       <div class="multiplayer-box">
-        <h4>1. ANFITRIÓN (Crear Sala)</h4>
+        <h4>1. ANFITRIÓN (Jugador 1)</h4>
         <button id="btn-create-room" class="btn btn-green">⚡ CREAR NUEVA SALA</button>
         <div id="host-info" class="hidden">
-          <p style="font-size: 12px; color: #fff; margin-top: 10px;">Pásale este código/IP virtual a tu amigo:</p>
+          <p style="font-size: 12px; color: #fff; margin-top: 10px;">Pásale este código a tu amigo:</p>
           <div id="my-room-code" class="room-badge">GENERANDO...</div>
         </div>
       </div>
 
       <div class="multiplayer-box">
-        <h4>2. INVITADO (Unirse a una Sala)</h4>
-        <input type="text" id="input-room-code" class="input-field" placeholder="Pega aquí la IP/Código del Anfitrión">
-        <button id="btn-join-room" class="btn btn-yellow">🎮 CONECTAR Y JUGAR</button>
+        <h4>2. INVITADO (Jugador 2)</h4>
+        <input type="text" id="input-room-code" class="input-field" placeholder="Pega aquí el código del Anfitrión">
+        <button id="btn-join-room" class="btn btn-yellow">🎮 CONECTAR Y UNIRSE</button>
       </div>
 
       <div id="multi-status" style="margin-top: 15px; font-weight: bold; color: var(--neon-cyan);">ESTADO: Desconectado</div>
     </div>
 
-    <!-- SECCIÓN: EMULADOR GBA -->
+    <!-- EMULADOR GBA -->
     <div id="emulator-wrapper" class="hidden">
       <div id="game"></div>
-      <!-- Panel de Control de Guardado -->
       <div class="emulator-controls">
         <button id="btn-save-local" class="btn btn-green">💾 GUARDAR PARTIDA LOCAL</button>
         <button id="btn-load-local" class="btn btn-yellow">📂 CARGAR PARTIDA LOCAL</button>
