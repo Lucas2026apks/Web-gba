@@ -18,18 +18,16 @@ const folderTitleDisplay = document.getElementById("folder-title-display");
 const gamesInFolderList = document.getElementById("games-in-folder-list");
 const btnBackFolders = document.getElementById("btn-back-folders");
 
-const btnCreateRoom = document.getElementById("btn-create-room");
-const btnJoinRoom = document.getElementById("btn-join-room");
-const hostInfo = document.getElementById("host-info");
-const myRoomCode = document.getElementById("my-room-code");
+const btnActivateNetplay = document.getElementById("btn-activate-netplay");
 const inputRoomCode = document.getElementById("input-room-code");
+const inputServerUrl = document.getElementById("input-server-url");
 const multiStatus = document.getElementById("multi-status");
-const playerRoleDisplay = document.getElementById("player-role-display");
+const netplayModeBadge = document.getElementById("netplay-mode-badge");
 
 let romActualNombre = "partida_gba";
-let peer = null;
-let connection = null;
-let esHost = false;
+let netplayActivo = false;
+let codigoSala = "";
+let servidorNetplay = "wss://netplay.emulatorjs.org";
 
 // ==========================================
 // CONTROL DE VISTAS
@@ -60,6 +58,30 @@ navBtnStore.addEventListener("click", () => switchView("store"));
 navBtnMulti.addEventListener("click", () => switchView("multi"));
 
 // ==========================================
+// CONFIGURACIÓN DE NETPLAY
+// ==========================================
+btnActivateNetplay.addEventListener("click", () => {
+  const room = inputRoomCode.value.trim();
+  const server = inputServerUrl.value.trim();
+
+  if (!room) {
+    alert("Ingresa un código o nombre para la sala.");
+    return;
+  }
+
+  codigoSala = room;
+  servidorNetplay = server || "wss://netplay.emulatorjs.org";
+  netplayActivo = true;
+
+  multiStatus.textContent = `ESTADO: Netplay listo en sala "${codigoSala}"`;
+  netplayModeBadge.textContent = `ACTIVO (${codigoSala})`;
+  netplayModeBadge.style.color = "#45f3ff";
+
+  alert(`¡Netplay configurado!\n\n1. En el otro dispositivo, abre la página e ingresa exactamente la misma sala: "${codigoSala}".\n2. Ambos seleccionen la misma ROM para conectarse.`);
+  switchView("store");
+});
+
+// ==========================================
 // IMPORTACIÓN Y EMULADOR
 // ==========================================
 btnGotoImport.addEventListener("click", () => romInput.click());
@@ -82,106 +104,15 @@ function iniciarEmulador(urlJuego) {
   window.EJS_gameUrl = urlJuego;
   window.EJS_pathtodata = "https://raw.githack.com/EmulatorJS/EmulatorJS/main/data/";
 
-  // Controles predeterminados del Jugador 2 mapeados a teclas secundarias (Teclado)
-  window.EJS_settings = {
-    "player2_up": "KeyI",
-    "player2_down": "KeyK",
-    "player2_left": "KeyJ",
-    "player2_right": "KeyL",
-    "player2_a": "KeyO",
-    "player2_b": "KeyU",
-    "player2_select": "Digit8",
-    "player2_start": "Digit9"
-  };
+  // Si Netplay está activado, se inyectan las opciones al emulador
+  if (netplayActivo && codigoSala) {
+    window.EJS_netplayServer = servidorNetplay;
+    window.EJS_gameID = codigoSala;
+  }
 
   const script = document.createElement("script");
   script.src = "https://raw.githack.com/EmulatorJS/EmulatorJS/main/data/loader.js";
   document.body.appendChild(script);
-}
-
-// ==========================================
-// SISTEMA MULTIJUGADOR P2P Y TRANSMISIÓN DE MANDOS
-// ==========================================
-btnCreateRoom.addEventListener("click", () => {
-  multiStatus.textContent = "ESTADO: Creando sala...";
-  peer = new Peer();
-  esHost = true;
-  playerRoleDisplay.textContent = "ANFITRIÓN (J1)";
-
-  peer.on("open", (id) => {
-    hostInfo.classList.remove("hidden");
-    myRoomCode.textContent = id;
-    multiStatus.textContent = "ESTADO: Esperando al Jugador 2...";
-  });
-
-  peer.on("connection", (conn) => {
-    connection = conn;
-    multiStatus.textContent = "ESTADO: ¡Jugador 2 Conectado!";
-    alert("¡Jugador 2 conectado! Elige una ROM en el explorador para empezar a jugar.");
-    
-    // El host recibe las pulsaciones del Jugador 2 y las ejecuta en su pantalla
-    connection.on("data", (data) => {
-      if (data && data.type === "INPUT") {
-        const event = new KeyboardEvent(data.action, {
-          code: data.code,
-          key: data.key,
-          bubbles: true
-        });
-        document.dispatchEvent(event);
-      }
-    });
-
-    switchView("store");
-  });
-});
-
-btnJoinRoom.addEventListener("click", () => {
-  const code = inputRoomCode.value.trim();
-  if (!code) return alert("Ingresa un código válido.");
-
-  multiStatus.textContent = "ESTADO: Conectando con la sala...";
-  peer = new Peer();
-  esHost = false;
-  playerRoleDisplay.textContent = "INVITADO (J2)";
-
-  peer.on("open", () => {
-    connection = peer.connect(code);
-
-    connection.on("open", () => {
-      multiStatus.textContent = "ESTADO: ¡Conectado al Anfitrión!";
-      alert("Conexión realizada. Tus teclas (I, K, J, L para moverte; U, O para A/B) controlarán al Jugador 2.");
-      
-      // El cliente intercepta sus teclas y se las transmite en tiempo real al Host
-      registrarControlesInvitado();
-    });
-  });
-});
-
-function registrarControlesInvitado() {
-  const mapaTeclasJ2 = {
-    "ArrowUp": "KeyI",
-    "ArrowDown": "KeyK",
-    "ArrowLeft": "KeyJ",
-    "ArrowRight": "KeyL",
-    "KeyZ": "KeyO",
-    "KeyX": "KeyU",
-    "Enter": "Digit9",
-    "ShiftRight": "Digit8"
-  };
-
-  const enviarInput = (tipo, e) => {
-    if (!connection) return;
-    const codigoMapeado = mapaTeclasJ2[e.code] || e.code;
-    connection.send({
-      type: "INPUT",
-      action: tipo,
-      code: codigoMapeado,
-      key: e.key
-    });
-  };
-
-  window.addEventListener("keydown", (e) => enviarInput("keydown", e));
-  window.addEventListener("keyup", (e) => enviarInput("keyup", e));
 }
 
 // ==========================================
