@@ -281,7 +281,7 @@ function activarBotonesDeJuego() {
 }
 
 // ==========================================
-// IMPORTACIÓN Y CARGA DE EMULADOR CON NETPLAY
+// IMPORTACIÓN Y CARGA DE EMULADOR CON NETPLAY NATIVO
 // ==========================================
 btnGotoImport.addEventListener("click", () => romInput.click());
 
@@ -301,24 +301,27 @@ function iniciarEmulador(urlJuego) {
   window.EJS_player = "#game";
   window.EJS_core = "gba";
   window.EJS_gameUrl = urlJuego;
-  window.EJS_pathtodata = "https://raw.githack.com/EmulatorJS/EmulatorJS/main/data/";
+
+  // CDN Oficial de EmulatorJS (Solución a errores de CORS y peticiones a JSON/CSS)
+  window.EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/";
 
   // ==========================================
-  // CONFIGURACIÓN DE CONEXIÓN CABLE LINK / NETPLAY
+  // CONFIGURACIÓN DE NETPLAY (CABLE LINK VIRTUAL)
   // ==========================================
   window.EJS_netplayUrl = "wss://netplay.emulatorjs.org";
-  window.EJS_gameId = romActualNombre.replace(/[^a-zA-Z0-9]/g, ""); // ID limpio compartido
+  window.EJS_gameId = romActualNombre.replace(/[^a-zA-Z0-9]/g, ""); 
   window.EJS_netplayServer = true;
 
-  // Asignar rol según conexión
+  // Asignar si el usuario actúa como Host (P1) o Guest (P2)
   if (esGuest) {
     window.EJS_netplayMode = "guest";
   } else {
     window.EJS_netplayMode = "host";
   }
 
+  // Carga del script principal desde el CDN oficial
   const script = document.createElement("script");
-  script.src = "https://raw.githack.com/EmulatorJS/EmulatorJS/main/data/loader.js";
+  script.src = "https://cdn.emulatorjs.org/stable/data/loader.js";
   document.body.appendChild(script);
 }
 
