@@ -3,6 +3,9 @@ let currentConn = null;
 let myNickname = "Jugador_" + Math.floor(Math.random() * 900 + 100);
 let romActualNombre = "partida_gba";
 
+// Variable para controlar el estado de Netplay (Host = P1, Guest = P2)
+let esGuest = false;
+
 // Elementos DOM de PeerJS y Salas
 const myPeerIdEl = document.getElementById("my-peer-id");
 const inputUsername = document.getElementById("input-username");
@@ -65,6 +68,7 @@ function escucharConexion(conn) {
 
   conn.on("close", () => {
     alert("El otro jugador ha salido de la sala.");
+    esGuest = false;
     renderizarListaUsuarios();
   });
 }
@@ -83,6 +87,10 @@ btnConnectPeer.addEventListener("click", () => {
 
   currentConn = peer.connect(targetId);
   escucharConexion(currentConn);
+
+  // Al unirte a la sala de otro, pasas a ser el Jugador 2 (Guest)
+  esGuest = true;
+  alert("Te has unido a la sala como Jugador 2 (Guest). Asegúrate de cargar la misma ROM que el Host.");
 });
 
 // Actualizar mote si el usuario lo edita
@@ -106,12 +114,12 @@ function renderizarListaUsuarios(nicknameAmigo = null) {
   const miItem = document.createElement("li");
   miItem.className = "user-item";
   miItem.innerHTML = `
-    <span>🎮 <b>${myNickname}</b> (Tú)</span>
+    <span>🎮 <b>${myNickname}</b> (Tú - ${esGuest ? 'Invitado P2' : 'Host P1'})</span>
     <span class="user-status host">EN SALA</span>
   `;
   usersConnectedList.appendChild(miItem);
 
-  // 2. Mostrar mote del invitado (Si existe)
+  // 2. Mostrar mote del invitado/host (Si existe)
   if (nicknameAmigo) {
     const amigoItem = document.createElement("li");
     amigoItem.className = "user-item";
@@ -273,7 +281,7 @@ function activarBotonesDeJuego() {
 }
 
 // ==========================================
-// IMPORTACIÓN Y CARGA DE EMULADOR
+// IMPORTACIÓN Y CARGA DE EMULADOR CON NETPLAY
 // ==========================================
 btnGotoImport.addEventListener("click", () => romInput.click());
 
@@ -294,6 +302,20 @@ function iniciarEmulador(urlJuego) {
   window.EJS_core = "gba";
   window.EJS_gameUrl = urlJuego;
   window.EJS_pathtodata = "https://raw.githack.com/EmulatorJS/EmulatorJS/main/data/";
+
+  // ==========================================
+  // CONFIGURACIÓN DE CONEXIÓN CABLE LINK / NETPLAY
+  // ==========================================
+  window.EJS_netplayUrl = "wss://netplay.emulatorjs.org";
+  window.EJS_gameId = romActualNombre.replace(/[^a-zA-Z0-9]/g, ""); // ID limpio compartido
+  window.EJS_netplayServer = true;
+
+  // Asignar rol según conexión
+  if (esGuest) {
+    window.EJS_netplayMode = "guest";
+  } else {
+    window.EJS_netplayMode = "host";
+  }
 
   const script = document.createElement("script");
   script.src = "https://raw.githack.com/EmulatorJS/EmulatorJS/main/data/loader.js";
