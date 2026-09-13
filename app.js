@@ -1,26 +1,11 @@
-let peer = null;
-let currentConn = null;
-let myNickname = "Jugador_" + Math.floor(Math.random() * 900 + 100);
 let romActualNombre = "partida_gba";
-
-// Variable para controlar el estado de Netplay (Host = P1, Guest = P2)
-let esGuest = false;
-
-// Elementos DOM de PeerJS y Salas
-const myPeerIdEl = document.getElementById("my-peer-id");
-const inputUsername = document.getElementById("input-username");
-const inputTargetPeer = document.getElementById("input-target-peer");
-const btnConnectPeer = document.getElementById("btn-connect-peer");
-const usersConnectedList = document.getElementById("users-connected-list");
 
 // Elementos DOM de Vistas
 const storeSection = document.getElementById("store-section");
-const multiplayerSection = document.getElementById("multiplayer-section");
 const emulatorWrapper = document.getElementById("emulator-wrapper");
 
 const navBtnEmu = document.getElementById("nav-btn-emu");
 const navBtnStore = document.getElementById("nav-btn-store");
-const navBtnMulti = document.getElementById("nav-btn-multi");
 
 // Elementos DOM del Explorador y Archivos
 const btnGotoImport = document.getElementById("btn-goto-import");
@@ -35,113 +20,14 @@ const gamesInFolderList = document.getElementById("games-in-folder-list");
 const btnBackFolders = document.getElementById("btn-back-folders");
 
 // ==========================================
-// PEERJS: SALAS Y LISTA DE MOTES EN TIEMPO REAL
-// ==========================================
-function initPeer() {
-  peer = new Peer();
-
-  peer.on("open", (id) => {
-    myPeerIdEl.textContent = id;
-    inputUsername.value = myNickname;
-    renderizarListaUsuarios();
-  });
-
-  // Escuchar cuando otro usuario se conecta a nuestra sala
-  peer.on("connection", (conn) => {
-    currentConn = conn;
-    escucharConexion(conn);
-  });
-}
-
-function escucharConexion(conn) {
-  conn.on("open", () => {
-    // Enviar nuestro mote al otro usuario al conectar
-    conn.send({ type: "NICKNAME_INFO", nickname: myNickname });
-  });
-
-  conn.on("data", (data) => {
-    if (data.type === "NICKNAME_INFO") {
-      // Recibir mote del compañero y actualizar lista
-      renderizarListaUsuarios(data.nickname);
-    }
-  });
-
-  conn.on("close", () => {
-    alert("El otro jugador ha salido de la sala.");
-    esGuest = false;
-    renderizarListaUsuarios();
-  });
-}
-
-// Unirse a la sala usando el ID
-btnConnectPeer.addEventListener("click", () => {
-  const targetId = inputTargetPeer.value.trim();
-  if (inputUsername.value.trim()) {
-    myNickname = inputUsername.value.trim();
-  }
-
-  if (!targetId) {
-    alert("Ingresa el código de la sala a la que deseas unirte.");
-    return;
-  }
-
-  currentConn = peer.connect(targetId);
-  escucharConexion(currentConn);
-
-  // Al unirte a la sala de otro, pasas a ser el Jugador 2 (Guest)
-  esGuest = true;
-  alert("Te has unido a la sala como Jugador 2 (Guest). Asegúrate de cargar la misma ROM que el Host.");
-});
-
-// Actualizar mote si el usuario lo edita
-inputUsername.addEventListener("change", () => {
-  if (inputUsername.value.trim()) {
-    myNickname = inputUsername.value.trim();
-    renderizarListaUsuarios();
-    
-    // Si la conexión está activa, notificar el cambio
-    if (currentConn && currentConn.open) {
-      currentConn.send({ type: "NICKNAME_INFO", nickname: myNickname });
-    }
-  }
-});
-
-// Dibujar la lista de motes/apodos
-function renderizarListaUsuarios(nicknameAmigo = null) {
-  usersConnectedList.innerHTML = "";
-
-  // 1. Mostrar tu mote (Local)
-  const miItem = document.createElement("li");
-  miItem.className = "user-item";
-  miItem.innerHTML = `
-    <span>🎮 <b>${myNickname}</b> (Tú - ${esGuest ? 'Invitado P2' : 'Host P1'})</span>
-    <span class="user-status host">EN SALA</span>
-  `;
-  usersConnectedList.appendChild(miItem);
-
-  // 2. Mostrar mote del invitado/host (Si existe)
-  if (nicknameAmigo) {
-    const amigoItem = document.createElement("li");
-    amigoItem.className = "user-item";
-    amigoItem.innerHTML = `
-      <span>🎮 <b>${nicknameAmigo}</b></span>
-      <span class="user-status">CONECTADO</span>
-    `;
-    usersConnectedList.appendChild(amigoItem);
-  }
-}
-
-// ==========================================
 // CONTROL DE NAVEGACIÓN DE VISTAS
 // ==========================================
 function switchView(viewName) {
   storeSection.classList.add("hidden");
-  multiplayerSection.classList.add("hidden");
   emulatorWrapper.classList.add("hidden");
 
   navBtnEmu.classList.remove("active");
   navBtnStore.classList.remove("active");
-  navBtnMulti.classList.remove("active");
 
   if (viewName === "emu") {
     emulatorWrapper.classList.remove("hidden");
@@ -149,15 +35,11 @@ function switchView(viewName) {
   } else if (viewName === "store") {
     storeSection.classList.remove("hidden");
     navBtnStore.classList.add("active");
-  } else if (viewName === "multi") {
-    multiplayerSection.classList.remove("hidden");
-    navBtnMulti.classList.add("active");
   }
 }
 
 navBtnEmu.addEventListener("click", () => switchView("emu"));
 navBtnStore.addEventListener("click", () => switchView("store"));
-navBtnMulti.addEventListener("click", () => switchView("multi"));
 
 // ==========================================
 // EXPLORADOR DE CARPETAS Y ROMS
@@ -281,7 +163,7 @@ function activarBotonesDeJuego() {
 }
 
 // ==========================================
-// IMPORTACIÓN Y CARGA DE EMULADOR CON NETPLAY NATIVO
+// IMPORTACIÓN Y CARGA DE EMULADOR
 // ==========================================
 btnGotoImport.addEventListener("click", () => romInput.click());
 
@@ -302,37 +184,15 @@ function iniciarEmulador(urlJuego) {
   window.EJS_core = "gba";
   window.EJS_gameUrl = urlJuego;
 
-  // 1. CDN Oficial de EmulatorJS
+  // CDN Oficial de EmulatorJS
   window.EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/";
-
-  // 2. Forzar idioma a español estándar para evitar el aviso "Missing language es-BO"
   window.EJS_language = "es-ES";
-
-  // ==========================================
-  // CONFIGURACIÓN DE NETPLAY (CABLE LINK)
-  // ==========================================
-  window.EJS_netplayUrl = "wss://netplay.emulatorjs.org";
-  
-  // Usar un ID de sala idéntico para ambos jugadores basándonos en el ID de PeerJS del Host
-  // Si eres Guest, te unes a la sala del Host; si eres Host, usas tu propio ID de PeerJS
-  const roomIdNetplay = esGuest ? inputTargetPeer.value.trim() : myPeerIdEl.textContent;
-  window.EJS_gameId = "gba_room_" + roomIdNetplay.replace(/[^a-zA-Z0-9]/g, "");
-
-  window.EJS_netplayServer = true;
-
-  // Asignar si el usuario actúa como Host (P1) o Guest (P2)
-  if (esGuest) {
-    window.EJS_netplayMode = "guest";
-  } else {
-    window.EJS_netplayMode = "host";
-  }
 
   // Carga del script principal desde el CDN oficial
   const script = document.createElement("script");
   script.src = "https://cdn.emulatorjs.org/stable/data/loader.js";
   document.body.appendChild(script);
 }
-
 
 // ==========================================
 // GUARDADO Y CARGA LOCAL (.SAV)
@@ -382,6 +242,5 @@ btnLoadLocal.addEventListener("click", () => {
 
 // Inicialización general
 document.addEventListener("DOMContentLoaded", () => {
-  initPeer();
   cargarJuegosAutomaticos();
 });
