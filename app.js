@@ -302,14 +302,22 @@ function iniciarEmulador(urlJuego) {
   window.EJS_core = "gba";
   window.EJS_gameUrl = urlJuego;
 
-  // CDN Oficial de EmulatorJS (Solución a errores de CORS y peticiones a JSON/CSS)
+  // 1. CDN Oficial de EmulatorJS
   window.EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/";
 
+  // 2. Forzar idioma a español estándar para evitar el aviso "Missing language es-BO"
+  window.EJS_language = "es-ES";
+
   // ==========================================
-  // CONFIGURACIÓN DE NETPLAY (CABLE LINK VIRTUAL)
+  // CONFIGURACIÓN DE NETPLAY (CABLE LINK)
   // ==========================================
   window.EJS_netplayUrl = "wss://netplay.emulatorjs.org";
-  window.EJS_gameId = romActualNombre.replace(/[^a-zA-Z0-9]/g, ""); 
+  
+  // Usar un ID de sala idéntico para ambos jugadores basándonos en el ID de PeerJS del Host
+  // Si eres Guest, te unes a la sala del Host; si eres Host, usas tu propio ID de PeerJS
+  const roomIdNetplay = esGuest ? inputTargetPeer.value.trim() : myPeerIdEl.textContent;
+  window.EJS_gameId = "gba_room_" + roomIdNetplay.replace(/[^a-zA-Z0-9]/g, "");
+
   window.EJS_netplayServer = true;
 
   // Asignar si el usuario actúa como Host (P1) o Guest (P2)
@@ -324,6 +332,7 @@ function iniciarEmulador(urlJuego) {
   script.src = "https://cdn.emulatorjs.org/stable/data/loader.js";
   document.body.appendChild(script);
 }
+
 
 // ==========================================
 // GUARDADO Y CARGA LOCAL (.SAV)
