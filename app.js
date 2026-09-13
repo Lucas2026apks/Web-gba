@@ -1,4 +1,16 @@
-// Elementos DOM
+let peer = null;
+let currentConn = null;
+let myNickname = "Jugador_" + Math.floor(Math.random() * 900 + 100);
+let romActualNombre = "partida_gba";
+
+// Elementos DOM de PeerJS y Salas
+const myPeerIdEl = document.getElementById("my-peer-id");
+const inputUsername = document.getElementById("input-username");
+const inputTargetPeer = document.getElementById("input-target-peer");
+const btnConnectPeer = document.getElementById("btn-connect-peer");
+const usersConnectedList = document.getElementById("users-connected-list");
+
+// Elementos DOM de Vistas
 const storeSection = document.getElementById("store-section");
 const multiplayerSection = document.getElementById("multiplayer-section");
 const emulatorWrapper = document.getElementById("emulator-wrapper");
@@ -7,6 +19,7 @@ const navBtnEmu = document.getElementById("nav-btn-emu");
 const navBtnStore = document.getElementById("nav-btn-store");
 const navBtnMulti = document.getElementById("nav-btn-multi");
 
+// Elementos DOM del Explorador y Archivos
 const btnGotoImport = document.getElementById("btn-goto-import");
 const romInput = document.getElementById("rom-input");
 const btnSaveLocal = document.getElementById("btn-save-local");
@@ -18,19 +31,100 @@ const folderTitleDisplay = document.getElementById("folder-title-display");
 const gamesInFolderList = document.getElementById("games-in-folder-list");
 const btnBackFolders = document.getElementById("btn-back-folders");
 
-const btnActivateNetplay = document.getElementById("btn-activate-netplay");
-const inputRoomCode = document.getElementById("input-room-code");
-const inputServerUrl = document.getElementById("input-server-url");
-const multiStatus = document.getElementById("multi-status");
-const netplayModeBadge = document.getElementById("netplay-mode-badge");
+// ==========================================
+// PEERJS: SALAS Y LISTA DE MOTES EN TIEMPO REAL
+// ==========================================
+function initPeer() {
+  peer = new Peer();
 
-let romActualNombre = "partida_gba";
-let netplayActivo = false;
-let codigoSala = "";
-let servidorNetplay = "wss://netplay.emulatorjs.org";
+  peer.on("open", (id) => {
+    myPeerIdEl.textContent = id;
+    inputUsername.value = myNickname;
+    renderizarListaUsuarios();
+  });
+
+  // Escuchar cuando otro usuario se conecta a nuestra sala
+  peer.on("connection", (conn) => {
+    currentConn = conn;
+    escucharConexion(conn);
+  });
+}
+
+function escucharConexion(conn) {
+  conn.on("open", () => {
+    // Enviar nuestro mote al otro usuario al conectar
+    conn.send({ type: "NICKNAME_INFO", nickname: myNickname });
+  });
+
+  conn.on("data", (data) => {
+    if (data.type === "NICKNAME_INFO") {
+      // Recibir mote del compañero y actualizar lista
+      renderizarListaUsuarios(data.nickname);
+    }
+  });
+
+  conn.on("close", () => {
+    alert("El otro jugador ha salido de la sala.");
+    renderizarListaUsuarios();
+  });
+}
+
+// Unirse a la sala usando el ID
+btnConnectPeer.addEventListener("click", () => {
+  const targetId = inputTargetPeer.value.trim();
+  if (inputUsername.value.trim()) {
+    myNickname = inputUsername.value.trim();
+  }
+
+  if (!targetId) {
+    alert("Ingresa el código de la sala a la que deseas unirte.");
+    return;
+  }
+
+  currentConn = peer.connect(targetId);
+  escucharConexion(currentConn);
+});
+
+// Actualizar mote si el usuario lo edita
+inputUsername.addEventListener("change", () => {
+  if (inputUsername.value.trim()) {
+    myNickname = inputUsername.value.trim();
+    renderizarListaUsuarios();
+    
+    // Si la conexión está activa, notificar el cambio
+    if (currentConn && currentConn.open) {
+      currentConn.send({ type: "NICKNAME_INFO", nickname: myNickname });
+    }
+  }
+});
+
+// Dibujar la lista de motes/apodos
+function renderizarListaUsuarios(nicknameAmigo = null) {
+  usersConnectedList.innerHTML = "";
+
+  // 1. Mostrar tu mote (Local)
+  const miItem = document.createElement("li");
+  miItem.className = "user-item";
+  miItem.innerHTML = `
+    <span>🎮 <b>${myNickname}</b> (Tú)</span>
+    <span class="user-status host">EN SALA</span>
+  `;
+  usersConnectedList.appendChild(miItem);
+
+  // 2. Mostrar mote del invitado (Si existe)
+  if (nicknameAmigo) {
+    const amigoItem = document.createElement("li");
+    amigoItem.className = "user-item";
+    amigoItem.innerHTML = `
+      <span>🎮 <b>${nicknameAmigo}</b></span>
+      <span class="user-status">CONECTADO</span>
+    `;
+    usersConnectedList.appendChild(amigoItem);
+  }
+}
 
 // ==========================================
-// CONTROL DE VISTAS
+// CONTROL DE NAVEGACIÓN DE VISTAS
 // ==========================================
 function switchView(viewName) {
   storeSection.classList.add("hidden");
@@ -58,65 +152,7 @@ navBtnStore.addEventListener("click", () => switchView("store"));
 navBtnMulti.addEventListener("click", () => switchView("multi"));
 
 // ==========================================
-// CONFIGURACIÓN DE NETPLAY
-// ==========================================
-btnActivateNetplay.addEventListener("click", () => {
-  const room = inputRoomCode.value.trim();
-  const server = inputServerUrl.value.trim();
-
-  if (!room) {
-    alert("Ingresa un código o nombre para la sala.");
-    return;
-  }
-
-  codigoSala = room;
-  servidorNetplay = server || "wss://netplay.emulatorjs.org";
-  netplayActivo = true;
-
-  multiStatus.textContent = `ESTADO: Netplay listo en sala "${codigoSala}"`;
-  netplayModeBadge.textContent = `ACTIVO (${codigoSala})`;
-  netplayModeBadge.style.color = "#45f3ff";
-
-  alert(`¡Netplay configurado!\n\n1. En el otro dispositivo, abre la página e ingresa exactamente la misma sala: "${codigoSala}".\n2. Ambos seleccionen la misma ROM para conectarse.`);
-  switchView("store");
-});
-
-// ==========================================
-// IMPORTACIÓN Y EMULADOR
-// ==========================================
-btnGotoImport.addEventListener("click", () => romInput.click());
-
-romInput.addEventListener("change", (evento) => {
-  const archivo = evento.target.files[0];
-  if (archivo) {
-    romActualNombre = archivo.name;
-    const romUrl = URL.createObjectURL(archivo);
-    iniciarEmulador(romUrl);
-  }
-});
-
-function iniciarEmulador(urlJuego) {
-  switchView("emu");
-  document.getElementById("game").innerHTML = "";
-
-  window.EJS_player = "#game";
-  window.EJS_core = "gba";
-  window.EJS_gameUrl = urlJuego;
-  window.EJS_pathtodata = "https://raw.githack.com/EmulatorJS/EmulatorJS/main/data/";
-
-  // Si Netplay está activado, se inyectan las opciones al emulador
-  if (netplayActivo && codigoSala) {
-    window.EJS_netplayServer = servidorNetplay;
-    window.EJS_gameID = codigoSala;
-  }
-
-  const script = document.createElement("script");
-  script.src = "https://raw.githack.com/EmulatorJS/EmulatorJS/main/data/loader.js";
-  document.body.appendChild(script);
-}
-
-// ==========================================
-// CARPETAS Y ARCHIVOS GITHUB
+// EXPLORADOR DE CARPETAS Y ROMS
 // ==========================================
 function cargarJuegosAutomaticos() {
   const repoOwner = "Lucas2026apks";
@@ -237,6 +273,34 @@ function activarBotonesDeJuego() {
 }
 
 // ==========================================
+// IMPORTACIÓN Y CARGA DE EMULADOR
+// ==========================================
+btnGotoImport.addEventListener("click", () => romInput.click());
+
+romInput.addEventListener("change", (evento) => {
+  const archivo = evento.target.files[0];
+  if (archivo) {
+    romActualNombre = archivo.name;
+    const romUrl = URL.createObjectURL(archivo);
+    iniciarEmulador(romUrl);
+  }
+});
+
+function iniciarEmulador(urlJuego) {
+  switchView("emu");
+  document.getElementById("game").innerHTML = "";
+
+  window.EJS_player = "#game";
+  window.EJS_core = "gba";
+  window.EJS_gameUrl = urlJuego;
+  window.EJS_pathtodata = "https://raw.githack.com/EmulatorJS/EmulatorJS/main/data/";
+
+  const script = document.createElement("script");
+  script.src = "https://raw.githack.com/EmulatorJS/EmulatorJS/main/data/loader.js";
+  document.body.appendChild(script);
+}
+
+// ==========================================
 // GUARDADO Y CARGA LOCAL (.SAV)
 // ==========================================
 btnSaveLocal.addEventListener("click", () => {
@@ -282,7 +346,8 @@ btnLoadLocal.addEventListener("click", () => {
   }
 });
 
-// Inicializar la app
+// Inicialización general
 document.addEventListener("DOMContentLoaded", () => {
+  initPeer();
   cargarJuegosAutomaticos();
 });
