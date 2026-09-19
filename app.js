@@ -10,13 +10,40 @@ const navBtnEmu = document.getElementById("nav-btn-emu");
 const btnGotoImport = document.getElementById("btn-goto-import");
 const romInput = document.getElementById("rom-input");
 
-// Elementos DOM del Guardado Local
+// Elementos DOM de Personalización de Tema
+const btnToggleTheme = document.getElementById("btn-toggle-theme");
+const themeMenu = document.getElementById("theme-menu");
+
+// Elementos DOM de Guardado Local
 const btnSaveLocal = document.getElementById("btn-save-local");
 const btnLoadLocal = document.getElementById("btn-load-local");
 
 // Elementos DOM de Explorador
 const folderView = document.getElementById("folderView");
 const folderContentView = document.getElementById("folderContentView");
+
+// ==========================================
+// CONTROL DE TEMAS Y PERSONALIZACIÓN
+// ==========================================
+if (btnToggleTheme && themeMenu) {
+  btnToggleTheme.addEventListener("click", () => {
+    themeMenu.classList.toggle("hidden");
+  });
+}
+
+function cambiarTema(nombreTema) {
+  document.body.className = ""; // Limpiar temas previos
+  if (nombreTema !== "default") {
+    document.body.classList.add(`theme-${nombreTema}`);
+  }
+  localStorage.setItem("gba_theme", nombreTema);
+}
+
+// Cargar tema guardado si existe
+const temaGuardado = localStorage.getItem("gba_theme");
+if (temaGuardado) {
+  cambiarTema(temaGuardado);
+}
 
 // ==========================================
 // CONTROL DE NAVEGACIÓN Y PESTAÑAS
@@ -35,19 +62,22 @@ function switchView(viewName) {
   }
 }
 
-navBtnStore.addEventListener("click", () => switchView("store"));
-navBtnEmu.addEventListener("click", () => switchView("emu"));
+// Event Listeners de Navegación
+if (navBtnStore) navBtnStore.addEventListener("click", () => switchView("store"));
+if (navBtnEmu) navBtnEmu.addEventListener("click", () => switchView("emu"));
 
 // Importar juego desde archivo local .GBA
-btnGotoImport.addEventListener("click", () => romInput.click());
-romInput.addEventListener("change", (evento) => {
-  const archivo = evento.target.files[0];
-  if (archivo) {
-    romActualNombre = archivo.name;
-    const romUrl = URL.createObjectURL(archivo);
-    ejecutarJuego(romUrl, archivo.name);
-  }
-});
+if (btnGotoImport && romInput) {
+  btnGotoImport.addEventListener("click", () => romInput.click());
+  romInput.addEventListener("change", (evento) => {
+    const archivo = evento.target.files[0];
+    if (archivo) {
+      romActualNombre = archivo.name;
+      const romUrl = URL.createObjectURL(archivo);
+      ejecutarJuego(romUrl, archivo.name);
+    }
+  });
+}
 
 // ==========================================
 // EXPLORADOR DE CARPETAS Y ROMS
@@ -92,8 +122,7 @@ function cargarJuegosAutomaticos() {
       "Sonic Advance 3.gba",
       "Sonic Battle (E) (M6).gba",
       "Rayman Advance.gba",
-      "Rayman 3.gba",
-      "Rayman Raving Rabbids.gba"
+      "Rayman 3.gba"
     ],
     "Megaman": [
       "Megaman Zero 1.gba",
@@ -172,7 +201,6 @@ function cargarJuegosAutomaticos() {
   };
 
   if (!folderView) return;
-
   folderView.classList.remove("hidden");
   if (folderContentView) folderContentView.classList.add("hidden");
   folderView.innerHTML = "";
@@ -184,28 +212,25 @@ function cargarJuegosAutomaticos() {
       <div style="font-size: 28px;">📁</div>
       <div>
         <strong style="color: #fff; font-size: 14px; display:block;">${nombreCategoria}</strong>
-        <span style="font-size: 12px; color: var(--neon-purple);">${listaArchivos.length} ROMs</span>
+        <span style="font-size: 12px; color: var(--neon-secondary);">${listaArchivos.length} ROMs</span>
       </div>
     `;
-
     folderItem.addEventListener("click", () => {
       abrirCarpeta(nombreCategoria, listaArchivos, repoOwner, repoName, extensionImagen);
     });
-
     folderView.appendChild(folderItem);
   }
 }
 
 function abrirCarpeta(nombreCategoria, listaArchivos, repoOwner, repoName, extensionImagen) {
   if (!folderView || !folderContentView) return;
-
   folderView.classList.add("hidden");
   folderContentView.classList.remove("hidden");
   folderContentView.innerHTML = "";
 
   const btnVolver = document.createElement("button");
   btnVolver.className = "btn-volver";
-  btnVolver.innerHTML = "⬅ Volver a Categorías";
+  btnVolver.innerHTML = "⬅️ Volver a Categorías";
   btnVolver.addEventListener("click", () => {
     cargarJuegosAutomaticos();
   });
@@ -233,11 +258,14 @@ function abrirCarpeta(nombreCategoria, listaArchivos, repoOwner, repoName, exten
       </div>
       <div class="card-info">
         <h3>${nombreSinExt}</h3>
-        <button class="btn-jugar">🎮 Jugar</button>
+        <div class="card-actions">
+          <button class="btn-action btn-play" title="Jugar">▶️</button>
+          <a href="${urlRom}" download="${nombreArchivo}" class="btn-action btn-download" title="Descargar ROM">⬇️</a>
+        </div>
       </div>
     `;
 
-    cardJuego.querySelector(".btn-jugar").addEventListener("click", () => {
+    cardJuego.querySelector(".btn-play").addEventListener("click", () => {
       ejecutarJuego(urlRom, nombreArchivo);
     });
 
@@ -253,7 +281,6 @@ function abrirCarpeta(nombreCategoria, listaArchivos, repoOwner, repoName, exten
 function ejecutarJuego(urlRom, tituloJuego) {
   romActualNombre = tituloJuego;
   switchView("emu");
-
   document.getElementById("game").innerHTML = "";
 
   window.EJS_player = "#game";
@@ -270,48 +297,50 @@ function ejecutarJuego(urlRom, tituloJuego) {
 // ==========================================
 // GUARDADO Y CARGA LOCAL (.SAV)
 // ==========================================
-btnSaveLocal.addEventListener("click", () => {
-  if (typeof window.EJS_getSave === "function") {
-    window.EJS_getSave((saveData) => {
-      if (!saveData) return alert("No hay datos de partida activa para guardar.");
+if (btnSaveLocal) {
+  btnSaveLocal.addEventListener("click", () => {
+    if (typeof window.EJS_getSave === "function") {
+      window.EJS_getSave((saveData) => {
+        if (!saveData) return alert("No hay datos de partida activa para guardar.");
+        const blob = new Blob([saveData], { type: "application/octet-stream" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `${romActualNombre}.sav`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        alert("💾 Partida guardada en tu dispositivo!");
+      });
+    } else {
+      alert("Primero debes iniciar un juego en el emulador.");
+    }
+  });
+}
 
-      const blob = new Blob([saveData], { type: "application/octet-stream" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = `${romActualNombre}.sav`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-
-      alert("💾 Partida guardada en tu dispositivo!");
-    });
-  } else {
-    alert("Primero debes iniciar un juego en el emulador.");
-  }
-});
-
-btnLoadLocal.addEventListener("click", () => {
-  if (typeof window.EJS_setSave === "function") {
-    const inputSave = document.createElement("input");
-    inputSave.type = "file";
-    inputSave.accept = ".sav";
-    inputSave.onchange = (e) => {
-      const saveFile = e.target.files[0];
-      if (saveFile) {
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-          const arrayBuffer = evt.target.result;
-          window.EJS_setSave(new Uint8Array(arrayBuffer));
-          alert("📂 Partida cargada exitosamente!");
-        };
-        reader.readAsArrayBuffer(saveFile);
-      }
-    };
-    inputSave.click();
-  } else {
-    alert("Inicia el emulador antes de cargar la partida.");
-  }
-});
+if (btnLoadLocal) {
+  btnLoadLocal.addEventListener("click", () => {
+    if (typeof window.EJS_setSave === "function") {
+      const inputSave = document.createElement("input");
+      inputSave.type = "file";
+      inputSave.accept = ".sav";
+      inputSave.onchange = (e) => {
+        const saveFile = e.target.files[0];
+        if (saveFile) {
+          const reader = new FileReader();
+          reader.onload = (evt) => {
+            const arrayBuffer = evt.target.result;
+            window.EJS_setSave(new Uint8Array(arrayBuffer));
+            alert("📂 Partida cargada exitosamente!");
+          };
+          reader.readAsArrayBuffer(saveFile);
+        }
+      };
+      inputSave.click();
+    } else {
+      alert("Inicia el emulador antes de cargar la partida.");
+    }
+  });
+}
 
 // Inicialización general
 document.addEventListener("DOMContentLoaded", () => {
