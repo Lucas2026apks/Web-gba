@@ -1,5 +1,11 @@
 let romActualNombre = "partida_gba";
 
+// Elementos DOM de Inicio y App
+const welcomeScreen = document.getElementById("welcome-screen");
+const appContainer = document.getElementById("app-container");
+const btnSelectGba = document.getElementById("btn-select-gba");
+const btnChangeConsole = document.getElementById("btn-change-console");
+
 // Elementos DOM de Secciones Principales
 const storeSection = document.getElementById("store-section");
 const emulatorModal = document.getElementById("emulatorModal");
@@ -21,6 +27,24 @@ const btnLoadLocal = document.getElementById("btn-load-local");
 // Elementos DOM de Explorador
 const folderView = document.getElementById("folderView");
 const folderContentView = document.getElementById("folderContentView");
+
+// ==========================================
+// PANTALLA DE INICIO Y NAVEGACIÓN DE CONSOLAS
+// ==========================================
+if (btnSelectGba) {
+  btnSelectGba.addEventListener("click", () => {
+    welcomeScreen.classList.add("hidden");
+    appContainer.classList.remove("hidden");
+    cargarJuegosAutomaticos();
+  });
+}
+
+if (btnChangeConsole) {
+  btnChangeConsole.addEventListener("click", () => {
+    appContainer.classList.add("hidden");
+    welcomeScreen.classList.remove("hidden");
+  });
+}
 
 // ==========================================
 // CONTROL DE TEMAS Y PERSONALIZACIÓN
@@ -341,8 +365,3 @@ if (btnLoadLocal) {
     }
   });
 }
-
-// Inicialización general
-document.addEventListener("DOMContentLoaded", () => {
-  cargarJuegosAutomaticos();
-});
