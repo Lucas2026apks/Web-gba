@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GBA Cyber Studio</title>
+  <title>EMULADOR WEB - GBA Cyber Studio</title>
   <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/Lucas2026apks/Room-gba/main/logo.png">
   <style>
     /* TEMAS DE COLOR (VARIABLES CSS) */
@@ -62,10 +62,115 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
-    body { background-color: var(--bg-dark); color: var(--text-main); display: flex; min-height: 100vh; overflow-x: hidden; transition: background-color 0.3s; }
+    body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; overflow-x: hidden; transition: background-color 0.3s; }
     .hidden { display: none !important; }
     
-    /* LAYOUT PRINCIPAL */
+    /* PANTALLA DE INICIO (LANDING PAGE A PANTALLA COMPLETA) */
+    #welcome-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: var(--bg-dark);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .welcome-card {
+      background: var(--bg-panel);
+      border: 2px solid var(--neon-primary);
+      box-shadow: 0 0 35px rgba(0, 0, 0, 0.8), 0 0 15px var(--neon-primary);
+      border-radius: 16px;
+      padding: 40px;
+      width: 100%;
+      max-width: 480px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+    }
+
+    .welcome-card h1 {
+      font-size: 2.2rem;
+      color: #fff;
+      text-shadow: 0 0 15px var(--neon-primary);
+      letter-spacing: 2px;
+      font-weight: 800;
+    }
+
+    .welcome-consoles {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* BOTONES DE CONSOLAS */
+    .console-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--neon-primary);
+      color: #fff;
+      padding: 14px 18px;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .console-btn .btn-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .console-btn img {
+      width: 26px;
+      height: 26px;
+      object-fit: contain;
+    }
+
+    .console-btn.active:hover {
+      background: var(--neon-primary);
+      color: var(--bg-dark);
+      box-shadow: 0 0 20px var(--neon-primary);
+      transform: translateY(-2px);
+    }
+
+    .console-btn.disabled {
+      background: rgba(255, 255, 255, 0.03);
+      border-color: #333;
+      color: #666;
+      cursor: not-allowed;
+    }
+
+    .badge-disabled {
+      font-size: 0.65rem;
+      background: #222;
+      color: #888;
+      padding: 4px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border: 1px solid #333;
+    }
+
+    /* CONTENEDOR PRINCIPAL DE LA APP */
+    #app-container {
+      display: flex;
+      min-height: 100vh;
+      width: 100vw;
+    }
+
+    /* BARRA LATERAL DE NAVEGACIÓN */
     aside {
       width: 280px;
       background-color: var(--bg-panel);
@@ -74,13 +179,41 @@
       display: flex;
       flex-direction: column;
       padding: 20px;
-      gap: 20px;
+      gap: 15px;
       flex-shrink: 0;
     }
-    .brand { display: flex; align-items: center; gap: 12px; }
-    .brand img { width: 36px; height: 36px; filter: drop-shadow(0 0 8px var(--neon-primary)); }
-    .brand h2 { font-size: 1.1rem; color: #fff; text-shadow: 0 0 10px var(--neon-primary); letter-spacing: 1px; }
-    nav { display: flex; flex-direction: column; gap: 10px; }
+
+    .brand-sidebar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 12px;
+    }
+
+    .brand-sidebar h2 {
+      font-size: 1.1rem;
+      color: #fff;
+      text-shadow: 0 0 10px var(--neon-primary);
+      letter-spacing: 1px;
+    }
+
+    .btn-switch-console {
+      background: transparent;
+      border: 1px solid var(--neon-primary);
+      color: var(--neon-primary);
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-switch-console:hover {
+      background: var(--neon-primary);
+      color: var(--bg-dark);
+    }
+
+    nav { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
     
     .nav-btn {
       background: var(--neon-primary);
@@ -285,62 +418,106 @@
       justify-content: center;
     }
     @media (max-width: 768px) {
-      body { flex-direction: column; }
+      #app-container { flex-direction: column; }
       aside { width: 100%; border-right: none; border-bottom: 2px solid var(--neon-primary); }
       main { padding: 15px; }
     }
   </style>
 </head>
 <body>
-  <!-- BARRA LATERAL DE NAVEGACIÓN -->
-  <aside>
-    <div class="brand">
-      <img src="https://raw.githubusercontent.com/Lucas2026apks/Room-gba/main/logo.png" alt="Logo" onerror="this.style.display='none'">
-      <h2>GBA CYBER STUDIO</h2>
-    </div>
-    <nav>
-      <button id="nav-btn-store" class="nav-btn active">📁 EXPLORADOR ROMS</button>
-      <button id="nav-btn-emu" class="nav-btn nav-btn-secondary">🎮 EMULADOR</button>
-      <button id="btn-goto-import" class="nav-btn nav-btn-secondary">📥 IMPORTAR .GBA</button>
+
+  <!-- PANTALLA DE INICIO A PANTALLA COMPLETA -->
+  <div id="welcome-screen">
+    <div class="welcome-card">
+      <h1>EMULADOR WEB</h1>
       
-      <!-- BOTÓN Y MENÚ PERSONALIZAR -->
-      <button id="btn-toggle-theme" class="nav-btn nav-btn-secondary">🎨 PERSONALIZAR</button>
-      <div id="theme-menu" class="theme-menu hidden">
-        <button class="theme-opt" onclick="cambiarTema('default')">🌐 Default (Cyan)</button>
-        <button class="theme-opt" onclick="cambiarTema('verde')">🟢 Verde Neón</button>
-        <button class="theme-opt" onclick="cambiarTema('naranja')">🟠 Naranja Neón</button>
-        <button class="theme-opt" onclick="cambiarTema('azul')">🔵 Azul Neón</button>
-        <button class="theme-opt" onclick="cambiarTema('rojo')">🔴 Rojo Neón</button>
-        <button class="theme-opt" onclick="cambiarTema('rosado')">💖 Rosado Neón</button>
-        <button class="theme-opt" onclick="cambiarTema('rgb')">🌈 RGB Chroma (Teclado)</button>
-      </div>
+      <div class="welcome-consoles">
+        <!-- BOTÓN ACTIVO GBA -->
+        <button id="btn-select-gba" class="console-btn active">
+          <div class="btn-content">
+            <img src="https://raw.githubusercontent.com/Lucas2026apks/Room-gba/main/gba.png" alt="GBA Icon" onerror="this.src='https://via.placeholder.com/26?text=GBA'">
+            <span>GAME BOY ADVANCE</span>
+          </div>
+        </button>
 
-      <input type="file" id="rom-input" accept=".gba" style="display: none;">
-    </nav>
-  </aside>
+        <!-- BOTONES DESACTIVADOS -->
+        <button class="console-btn disabled" disabled>
+          <div class="btn-content">
+            <span>SNES</span>
+          </div>
+          <span class="badge-disabled">PRÓXIMAMENTE</span>
+        </button>
 
-  <!-- CONTENIDO PRINCIPAL -->
-  <main>
-    <!-- EXPLORADOR DE CARPETAS Y ROMS -->
-    <div id="store-section" class="container-panel">
-      <h3 style="margin-bottom: 5px; color: #fff; text-shadow: 0 0 10px var(--neon-primary);">📚 BIBLIOTECA DE JUEGOS GBA</h3>
-      <p style="font-size: 13px; color: var(--neon-secondary); margin-bottom: 20px;">SELECCIONA UNA CATEGORÍA O UN JUEGO PARA EMPEZAR:</p>
-      
-      <!-- Contenedor de carpetas -->
-      <div id="folderView"></div>
-      <!-- Contenedor de juegos dentro de carpeta -->
-      <div id="folderContentView" class="hidden"></div>
-    </div>
+        <button class="console-btn disabled" disabled>
+          <div class="btn-content">
+            <span>NINTENDO 64</span>
+          </div>
+          <span class="badge-disabled">PRÓXIMAMENTE</span>
+        </button>
 
-    <!-- CONTENEDOR DEL EMULADOR Y GUARDADO LOCAL -->
-    <div id="emulatorModal" class="container-panel hidden">
-      <div id="game"></div>
-      <div class="emulator-controls">
-        <button id="btn-save-local" class="btn btn-green">💾 GUARDAR PARTIDA LOCAL</button>
-        <button id="btn-load-local" class="btn btn-yellow">📂 CARGAR PARTIDA LOCAL</button>
+        <button class="console-btn disabled" disabled>
+          <div class="btn-content">
+            <span>NINTENDO DS</span>
+          </div>
+          <span class="badge-disabled">PRÓXIMAMENTE</span>
+        </button>
       </div>
     </div>
-  </main>
+  </div>
+
+  <!-- INTERFAZ PRINCIPAL (OCULTA HASTA SELECCIONAR CONSOLA) -->
+  <div id="app-container" class="hidden">
+    <!-- BARRA LATERAL DE NAVEGACIÓN -->
+    <aside>
+      <div class="brand-sidebar">
+        <h2>GAME BOY ADVANCE</h2>
+        <button id="btn-change-console" class="btn-switch-console" title="Volver al menú de inicio">🏠 Inicio</button>
+      </div>
+
+      <nav>
+        <button id="nav-btn-store" class="nav-btn active">📁 EXPLORADOR ROMS</button>
+        <button id="nav-btn-emu" class="nav-btn nav-btn-secondary">🎮 EMULADOR</button>
+        <button id="btn-goto-import" class="nav-btn nav-btn-secondary">📥 IMPORTAR .GBA</button>
+        
+        <!-- BOTÓN Y MENÚ PERSONALIZAR -->
+        <button id="btn-toggle-theme" class="nav-btn nav-btn-secondary">🎨 PERSONALIZAR</button>
+        <div id="theme-menu" class="theme-menu hidden">
+          <button class="theme-opt" onclick="cambiarTema('default')">🌐 Default (Cyan)</button>
+          <button class="theme-opt" onclick="cambiarTema('verde')">🟢 Verde Neón</button>
+          <button class="theme-opt" onclick="cambiarTema('naranja')">🟠 Naranja Neón</button>
+          <button class="theme-opt" onclick="cambiarTema('azul')">🔵 Azul Neón</button>
+          <button class="theme-opt" onclick="cambiarTema('rojo')">🔴 Rojo Neón</button>
+          <button class="theme-opt" onclick="cambiarTema('rosado')">💖 Rosado Neón</button>
+          <button class="theme-opt" onclick="cambiarTema('rgb')">🌈 RGB Chroma (Teclado)</button>
+        </div>
+
+        <input type="file" id="rom-input" accept=".gba" style="display: none;">
+      </nav>
+    </aside>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main>
+      <!-- EXPLORADOR DE CARPETAS Y ROMS -->
+      <div id="store-section" class="container-panel">
+        <h3 style="margin-bottom: 5px; color: #fff; text-shadow: 0 0 10px var(--neon-primary);">📚 BIBLIOTECA DE JUEGOS GBA</h3>
+        <p style="font-size: 13px; color: var(--neon-secondary); margin-bottom: 20px;">SELECCIONA UNA CATEGORÍA O UN JUEGO PARA EMPEZAR:</p>
+        
+        <!-- Contenedor de carpetas -->
+        <div id="folderView"></div>
+        <!-- Contenedor de juegos dentro de carpeta -->
+        <div id="folderContentView" class="hidden"></div>
+      </div>
+
+      <!-- CONTENEDOR DEL EMULADOR Y GUARDADO LOCAL -->
+      <div id="emulatorModal" class="container-panel hidden">
+        <div id="game"></div>
+        <div class="emulator-controls">
+          <button id="btn-save-local" class="btn btn-green">💾 GUARDAR PARTIDA LOCAL</button>
+          <button id="btn-load-local" class="btn btn-yellow">📂 CARGAR PARTIDA LOCAL</button>
+        </div>
+      </div>
+    </main>
+  </div>
 
   <script src="./app.js"></script>
 </body>
