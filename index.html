@@ -1,244 +1,348 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GBA Cyber Studio</title>
-  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/Lucas2026apks/Room-gba/main/logo.png">
+let romActualNombre = "partida_gba";
 
-  <style>
-    :root {
-      --bg-dark: #0b0c10;
-      --bg-panel: #1f2833;
-      --bg-card: #0b0c10;
-      --neon-cyan: #45f3ff;
-      --neon-purple: #c5a1ff;
-      --text-main: #66fcf1;
+// Elementos DOM de Secciones Principales
+const storeSection = document.getElementById("store-section");
+const emulatorModal = document.getElementById("emulatorModal");
+
+// Elementos DOM de Navegación Lateral
+const navBtnStore = document.getElementById("nav-btn-store");
+const navBtnEmu = document.getElementById("nav-btn-emu");
+const btnGotoImport = document.getElementById("btn-goto-import");
+const romInput = document.getElementById("rom-input");
+
+// Elementos DOM de Personalización de Tema
+const btnToggleTheme = document.getElementById("btn-toggle-theme");
+const themeMenu = document.getElementById("theme-menu");
+
+// Elementos DOM de Guardado Local
+const btnSaveLocal = document.getElementById("btn-save-local");
+const btnLoadLocal = document.getElementById("btn-load-local");
+
+// Elementos DOM de Explorador
+const folderView = document.getElementById("folderView");
+const folderContentView = document.getElementById("folderContentView");
+
+// ==========================================
+// CONTROL DE TEMAS Y PERSONALIZACIÓN
+// ==========================================
+if (btnToggleTheme && themeMenu) {
+  btnToggleTheme.addEventListener("click", () => {
+    themeMenu.classList.toggle("hidden");
+  });
+}
+
+function cambiarTema(nombreTema) {
+  document.body.className = ""; // Limpiar temas previos
+  if (nombreTema !== "default") {
+    document.body.classList.add(`theme-${nombreTema}`);
+  }
+  localStorage.setItem("gba_theme", nombreTema);
+}
+
+// Cargar tema guardado si existe
+const temaGuardado = localStorage.getItem("gba_theme");
+if (temaGuardado) {
+  cambiarTema(temaGuardado);
+}
+
+// ==========================================
+// CONTROL DE NAVEGACIÓN Y PESTAÑAS
+// ==========================================
+function switchView(viewName) {
+  if (viewName === "store") {
+    storeSection.classList.remove("hidden");
+    emulatorModal.classList.add("hidden");
+    navBtnStore.classList.add("active");
+    navBtnEmu.classList.remove("active");
+  } else if (viewName === "emu") {
+    storeSection.classList.add("hidden");
+    emulatorModal.classList.remove("hidden");
+    navBtnEmu.classList.add("active");
+    navBtnStore.classList.remove("active");
+  }
+}
+
+// Event Listeners de Navegación
+if (navBtnStore) navBtnStore.addEventListener("click", () => switchView("store"));
+if (navBtnEmu) navBtnEmu.addEventListener("click", () => switchView("emu"));
+
+// Importar juego desde archivo local .GBA
+if (btnGotoImport && romInput) {
+  btnGotoImport.addEventListener("click", () => romInput.click());
+  romInput.addEventListener("change", (evento) => {
+    const archivo = evento.target.files[0];
+    if (archivo) {
+      romActualNombre = archivo.name;
+      const romUrl = URL.createObjectURL(archivo);
+      ejecutarJuego(romUrl, archivo.name);
     }
+  });
+}
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
-    body { background-color: var(--bg-dark); color: var(--text-main); display: flex; min-height: 100vh; overflow-x: hidden; }
-    .hidden { display: none !important; }
+// ==========================================
+// EXPLORADOR DE CARPETAS Y ROMS
+// ==========================================
+function cargarJuegosAutomaticos() {
+  const repoOwner = "Lucas2026apks";
+  const repoName = "Room-gba";
+  const extensionImagen = ".png";
 
-    /* LAYOUT PRINCIPAL */
-    aside {
-      width: 280px;
-      background-color: var(--bg-panel);
-      border-right: 2px solid var(--neon-cyan);
-      box-shadow: 5px 0 20px rgba(69, 243, 255, 0.2);
-      display: flex;
-      flex-direction: column;
-      padding: 20px;
-      gap: 20px;
-      flex-shrink: 0;
-    }
+  const categoriasJuegos = {
+    "Pokémon": [
+      "Pokemon - Esmeralda.gba",
+      "Pokemon - Rojo fuego.gba",
+      "Pokemon - Rubi.gba",
+      "Pokemon - Verde hoja.gba",
+      "Pokemon - Zafiro.gba",
+      "Pokemon - Pinball RZ.gba",
+      "Pokemon Mundo misterioso - Equipo de rescate rojo.gba"
+    ],
+    "Super Mario & Donkey Kong": [
+      "Super Mario Advance 2.gba",
+      "Super Mario Advance 3.gba",
+      "Super Mario Advance 4.gba",
+      "Mario vs. Donkey Kong.gba",
+      "Mario Party Advance.gba",
+      "Mario Golf - Advance Tour.gba",
+      "Mario Tennis Power Tour.gba",
+      "Donkey Kong Country 1.gba",
+      "Donkey Kong Country 2.gba",
+      "Donkey Kong Country 3.gba",
+      "Wario-Land 4.gba"
+    ],
+    "Zelda & Metroid": [
+      "The Legend of Zelda - A Link to the Past & Four Swords.gba",
+      "The Legend of Zelda - The Minish Cap.gba",
+      "Metroid - Fusion.gba",
+      "Metroid - Zero Mission.gba"
+    ],
+    "Sonic & Rayman": [
+      "Sonic Advance .gba",
+      "Sonic Advance 2.gba",
+      "Sonic Advance 3.gba",
+      "Sonic Battle (E) (M6).gba",
+      "Rayman Advance.gba",
+      "Rayman 3.gba"
+    ],
+    "Megaman": [
+      "Megaman Zero 1.gba",
+      "Megaman_Zero 2.gba",
+      "MegaMan Zero 3.gba",
+      "MegaMan Zero 4.gba"
+    ],
+    "Castlevania & Crash": [
+      "Castlevania - Aria of Sorrow.gba",
+      "Castlevania - Circle Of The Moon.gba",
+      "Castlevania - Harmony Of Dissonance.gba",
+      "Crash Bandicoot XS.gba",
+      "Crash Bandicoot 2 N-Tranced.gba",
+      "Crash Bandicoot Fusion.gba",
+      "Crash of the Titans.gba"
+    ],
+    "Dragon Ball & Anime": [
+      "Dragon Ball - Advance adventure.gba",
+      "Dragon Ball Z - Supersonic Warriors.gba",
+      "Dragon Ball Z - The Legacy of Goku II.gba",
+      "DragonBall Z Taiketsu.gba",
+      "Naruto- Ninja council 2.gba",
+      "Digimon - Battle Spirit (E) (M5).gba",
+      "Digimon - Battle Spirit 2 (E) (M5).gba",
+      "Astroboy - Omega Factor.gba"
+    ],
+    "RPG & Aventuras": [
+      "Final Fantasy I y II.gba",
+      "Final Fantasy IV.gba",
+      "Final Fantasy V Advance.gba",
+      "Final Fantasy VI Advance.gba",
+      "Final Fantasy Tactics.gba",
+      "Fire Emblem.gba",
+      "Fire Emblem- Sword of Seals.gba",
+      "Fire Emblem - The Sacred Stones.gba",
+      "Kingdom Hearts - Chain of Memories.gba",
+      "mother 3.gba"
+    ],
+    "Acción & Shooters": [
+      "0155 - Doom (UE).gba",
+      "1579 - Doom II (E).gba",
+      "0606 - Duke Nukem Advance (E) (M4).gba",
+      "0735 - Contra Hard Spirits (J)(Cezar).gba",
+      "1840 - Metal Slug Advance (E).gba",
+      "Alien Hominid.gba",
+      "Star Wars Episode III - Revenge of the Sith.gba",
+      "Batman Begins.gba",
+      "Phalanx - The Enforce Fighter A-144.gba"
+    ],
+    "Carreras & Estrategia": [
+      "0263 - Advance Wars (E)(Arrogance).gba",
+      "1155 - Advance Wars 2 - Black Hole Rising (E)(Surplus).gba",
+      "1742 - Grand Theft Auto Advance (E)(Rising Sun).gba",
+      "2172 - Driv3r (E)(Rising Sun).gba",
+      "Need for Speed Carbon - Own The City.gba",
+      "Crazy Taxi Catch a Ride.gba",
+      "Crash Nitro Kart.gba"
+    ],
+    "Kirby & Plataformas": [
+      "Kirby - Nightmare in Dream Land.gba",
+      "Kirby - The Amazing Mirror.gba",
+      "Drill Dozer.gba",
+      "El Laboratorio de Dexter.GBA",
+      "Narnia - El leon la bruja y el armario.gba",
+      "Piratas del Caribe - El cofre del hombre muerto.gba",
+      "Planet Monsters.gba",
+      "Planet of the Apes.gba"
+    ],
+    "Bob Esponja & Pinball": [
+      "0177 - SpongeBob SquarePants - SuperSponge (U).gba",
+      "0592 - SpongeBob SquarePants - Revenge of the Flying Dutchman (UE).gba",
+      "2237 - SpongeBob SquarePants - Lights, Camera, Pants! (E) (M7) [b].gba",
+      "2562 - SpongeBob SquarePants - Creature from the Krusty Krab (E) (M8).gba",
+      "Pinball Advance.gba"
+    ]
+  };
 
-    .brand { display: flex; align-items: center; gap: 12px; }
-    .brand img { width: 36px; height: 36px; filter: drop-shadow(0 0 8px var(--neon-cyan)); }
-    .brand h2 { font-size: 1.1rem; color: #fff; text-shadow: 0 0 10px var(--neon-cyan); letter-spacing: 1px; }
+  if (!folderView) return;
+  folderView.classList.remove("hidden");
+  if (folderContentView) folderContentView.classList.add("hidden");
+  folderView.innerHTML = "";
 
-    nav { display: flex; flex-direction: column; gap: 10px; }
-    .nav-btn {
-      background: var(--neon-cyan);
-      color: var(--bg-dark);
-      border: none;
-      padding: 12px;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-      text-align: left;
-      transition: all 0.3s;
-    }
-
-    .nav-btn:hover, .nav-btn.active {
-      background: var(--bg-panel);
-      color: var(--neon-cyan);
-      border: 2px solid var(--neon-cyan);
-      box-shadow: 0 0 15px rgba(69, 243, 255, 0.6);
-    }
-
-    .nav-btn-secondary { background: var(--neon-purple); }
-    .nav-btn-secondary:hover { color: var(--neon-purple); border-color: var(--neon-purple); }
-
-    main { flex: 1; padding: 25px; display: flex; flex-direction: column; align-items: center; overflow-y: auto; }
-    .container-panel {
-      width: 100%;
-      max-width: 950px;
-      background-color: var(--bg-panel);
-      border: 2px solid var(--neon-cyan);
-      border-radius: 12px;
-      padding: 25px;
-      box-shadow: 0px 0px 25px rgba(69, 243, 255, 0.3);
-    }
-
-    .btn {
-      padding: 10px 16px;
-      border-radius: 8px;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.9rem;
-      transition: all 0.3s;
-    }
-
-    .btn-green { background-color: var(--neon-cyan); color: var(--bg-dark); }
-    .btn-green:hover { background-color: var(--bg-panel); color: var(--neon-cyan); border: 2px solid var(--neon-cyan); }
-    .btn-yellow { background-color: var(--neon-purple); color: var(--bg-dark); }
-    .btn-yellow:hover { background-color: var(--bg-panel); color: var(--neon-purple); border: 2px solid var(--neon-purple); }
-
-    /* GRID DE CATEGORÍAS */
-    #folderView {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 15px;
-      margin-top: 15px;
-    }
-
-    .folder-card {
-      background: var(--bg-card);
-      border: 2px dashed var(--neon-cyan);
-      padding: 15px;
-      border-radius: 8px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      transition: all 0.3s ease;
-    }
-
-    .folder-card:hover {
-      border-style: solid;
-      box-shadow: 0 0 15px rgba(69, 243, 255, 0.6);
-      transform: translateY(-2px);
-    }
-
-    /* GRID DE JUEGOS Y TARJETAS DE ROMS */
-    .grid-juegos {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 20px;
-      margin-top: 15px;
-    }
-
-    .game-card {
-      background: var(--bg-card);
-      border: 1px solid var(--neon-cyan);
-      border-radius: 8px;
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      gap: 10px;
-      box-shadow: 0 0 10px rgba(69, 243, 255, 0.15);
-    }
-
-    .card-img-wrapper img {
-      width: 130px;
-      height: 130px;
-      object-fit: cover;
-      border-radius: 6px;
-      border: 1px solid var(--neon-purple);
-    }
-
-    .card-info h3 { font-size: 0.9rem; color: #fff; margin-bottom: 8px; }
-
-    .btn-jugar, .btn-volver {
-      background-color: var(--neon-cyan);
-      color: var(--bg-dark);
-      border: none;
-      padding: 8px 14px;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .btn-jugar:hover, .btn-volver:hover {
-      background-color: var(--bg-panel);
-      color: var(--neon-cyan);
-      outline: 1px solid var(--neon-cyan);
-    }
-
-    /* CONTENEDOR EMULADOR Y CONTROLES */
-    #emulatorModal {
-      width: 100%;
-      max-width: 800px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    #game {
-      width: 100%;
-      aspect-ratio: 3 / 2;
-      max-height: 500px;
-      background: #000;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 2px solid var(--neon-cyan);
-      box-shadow: 0 0 25px rgba(69, 243, 255, 0.5);
-    }
-
-    .emulator-controls {
-      display: flex;
-      gap: 15px;
-      margin-top: 20px;
-      width: 100%;
-      justify-content: center;
-    }
-
-    @media (max-width: 768px) {
-      body { flex-direction: column; }
-      aside { width: 100%; border-right: none; border-bottom: 2px solid var(--neon-cyan); }
-      main { padding: 15px; }
-    }
-  </style>
-</head>
-<body>
-
-  <!-- BARRA LATERAL DE NAVEGACIÓN -->
-  <aside>
-    <div class="brand">
-      <img src="https://raw.githubusercontent.com/Lucas2026apks/Room-gba/main/logo.png" alt="Logo" onerror="this.style.display='none'">
-      <h2>GBA CYBER STUDIO</h2>
-    </div>
-
-    <nav>
-      <button id="nav-btn-store" class="nav-btn active">⚡ EXPLORADOR ROMS</button>
-      <button id="nav-btn-emu" class="nav-btn nav-btn-secondary">🎮 EMULADOR</button>
-      <button id="btn-goto-import" class="nav-btn nav-btn-secondary">📁 IMPORTAR .GBA</button>
-      <input type="file" id="rom-input" accept=".gba" style="display: none;">
-    </nav>
-  </aside>
-
-  <!-- CONTENIDO PRINCIPAL -->
-  <main>
-    <!-- EXPLORADOR DE CARPETAS Y ROMS -->
-    <div id="store-section" class="container-panel">
-      <h3 style="margin-bottom: 5px; color: #fff; text-shadow: 0 0 10px var(--neon-cyan);">⚡ BIBLIOTECA DE JUEGOS GBA</h3>
-      <p style="font-size: 13px; color: var(--neon-purple); margin-bottom: 20px;">SELECCIONA UNA CATEGORÍA O UN JUEGO PARA EMPEZAR:</p>
-      
-      <!-- Contenedor de carpetas -->
-      <div id="folderView"></div>
-
-      <!-- Contenedor de juegos dentro de carpeta -->
-      <div id="folderContentView" class="hidden"></div>
-    </div>
-
-    <!-- CONTENEDOR DEL EMULADOR Y GUARDADO LOCAL -->
-    <div id="emulatorModal" class="container-panel hidden">
-      <div id="game"></div>
-      <div class="emulator-controls">
-        <button id="btn-save-local" class="btn btn-green">💾 GUARDAR PARTIDA LOCAL</button>
-        <button id="btn-load-local" class="btn btn-yellow">📂 CARGAR PARTIDA LOCAL</button>
+  for (const [nombreCategoria, listaArchivos] of Object.entries(categoriasJuegos)) {
+    const folderItem = document.createElement("div");
+    folderItem.className = "folder-card";
+    folderItem.innerHTML = `
+      <div style="font-size: 28px;">📁</div>
+      <div>
+        <strong style="color: #fff; font-size: 14px; display:block;">${nombreCategoria}</strong>
+        <span style="font-size: 12px; color: var(--neon-secondary);">${listaArchivos.length} ROMs</span>
       </div>
-    </div>
-  </main>
+    `;
+    folderItem.addEventListener("click", () => {
+      abrirCarpeta(nombreCategoria, listaArchivos, repoOwner, repoName, extensionImagen);
+    });
+    folderView.appendChild(folderItem);
+  }
+}
 
-  <script src="./app.js"></script>
-</body>
-</html>
+function abrirCarpeta(nombreCategoria, listaArchivos, repoOwner, repoName, extensionImagen) {
+  if (!folderView || !folderContentView) return;
+  folderView.classList.add("hidden");
+  folderContentView.classList.remove("hidden");
+  folderContentView.innerHTML = "";
+
+  const btnVolver = document.createElement("button");
+  btnVolver.className = "btn-volver";
+  btnVolver.innerHTML = "⬅️ Volver a Categorías";
+  btnVolver.addEventListener("click", () => {
+    cargarJuegosAutomaticos();
+  });
+  folderContentView.appendChild(btnVolver);
+
+  const titulo = document.createElement("h2");
+  titulo.style.color = "#fff";
+  titulo.style.margin = "15px 0";
+  titulo.textContent = nombreCategoria;
+  folderContentView.appendChild(titulo);
+
+  const gridJuegos = document.createElement("div");
+  gridJuegos.className = "grid-juegos";
+
+  listaArchivos.forEach((nombreArchivo) => {
+    const nombreSinExt = nombreArchivo.replace(/\.(gba|GBA)$/, "");
+    const urlRom = `https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@main/${encodeURIComponent(nombreArchivo)}`;
+    const urlImagen = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/main/${encodeURIComponent(nombreSinExt)}${extensionImagen}`;
+
+    const cardJuego = document.createElement("div");
+    cardJuego.className = "game-card";
+    cardJuego.innerHTML = `
+      <div class="card-img-wrapper">
+        <img src="${urlImagen}" alt="${nombreSinExt}" onerror="this.src='https://via.placeholder.com/150x150?text=GBA+Game';">
+      </div>
+      <div class="card-info">
+        <h3>${nombreSinExt}</h3>
+        <div class="card-actions">
+          <button class="btn-action btn-play" title="Jugar">▶️</button>
+          <a href="${urlRom}" download="${nombreArchivo}" class="btn-action btn-download" title="Descargar ROM">⬇️</a>
+        </div>
+      </div>
+    `;
+
+    cardJuego.querySelector(".btn-play").addEventListener("click", () => {
+      ejecutarJuego(urlRom, nombreArchivo);
+    });
+
+    gridJuegos.appendChild(cardJuego);
+  });
+
+  folderContentView.appendChild(gridJuegos);
+}
+
+// ==========================================
+// INICIALIZACIÓN DEL EMULADOR
+// ==========================================
+function ejecutarJuego(urlRom, tituloJuego) {
+  romActualNombre = tituloJuego;
+  switchView("emu");
+  document.getElementById("game").innerHTML = "";
+
+  window.EJS_player = "#game";
+  window.EJS_core = "gba";
+  window.EJS_gameUrl = urlRom;
+  window.EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/";
+  window.EJS_language = "es-ES";
+
+  const script = document.createElement("script");
+  script.src = "https://cdn.emulatorjs.org/stable/data/loader.js";
+  document.body.appendChild(script);
+}
+
+// ==========================================
+// GUARDADO Y CARGA LOCAL (.SAV)
+// ==========================================
+if (btnSaveLocal) {
+  btnSaveLocal.addEventListener("click", () => {
+    if (typeof window.EJS_getSave === "function") {
+      window.EJS_getSave((saveData) => {
+        if (!saveData) return alert("No hay datos de partida activa para guardar.");
+        const blob = new Blob([saveData], { type: "application/octet-stream" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `${romActualNombre}.sav`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        alert("💾 Partida guardada en tu dispositivo!");
+      });
+    } else {
+      alert("Primero debes iniciar un juego en el emulador.");
+    }
+  });
+}
+
+if (btnLoadLocal) {
+  btnLoadLocal.addEventListener("click", () => {
+    if (typeof window.EJS_setSave === "function") {
+      const inputSave = document.createElement("input");
+      inputSave.type = "file";
+      inputSave.accept = ".sav";
+      inputSave.onchange = (e) => {
+        const saveFile = e.target.files[0];
+        if (saveFile) {
+          const reader = new FileReader();
+          reader.onload = (evt) => {
+            const arrayBuffer = evt.target.result;
+            window.EJS_setSave(new Uint8Array(arrayBuffer));
+            alert("📂 Partida cargada exitosamente!");
+          };
+          reader.readAsArrayBuffer(saveFile);
+        }
+      };
+      inputSave.click();
+    } else {
+      alert("Inicia el emulador antes de cargar la partida.");
+    }
+  });
+}
+
+// Inicialización general
+document.addEventListener("DOMContentLoaded", () => {
+  cargarJuegosAutomaticos();
+});
