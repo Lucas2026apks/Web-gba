@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EMULADOR WEB - GBA Cyber Studio</title>
   <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/Lucas2026apks/Room-gba/main/logo.png">
+  
+  <!-- VÍNCULO PARA PWA (INSTALACIÓN DIRECTA TIPO APP) -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#45f3ff">
+
   <style>
     /* TEMAS DE COLOR (VARIABLES CSS) */
     :root {
@@ -86,13 +91,13 @@
       border: 2px solid var(--neon-primary);
       box-shadow: 0 0 35px rgba(0, 0, 0, 0.8), 0 0 15px var(--neon-primary);
       border-radius: 16px;
-      padding: 40px;
+      padding: 30px;
       width: 100%;
       max-width: 480px;
       text-align: center;
       display: flex;
       flex-direction: column;
-      gap: 25px;
+      gap: 20px;
     }
 
     .welcome-card h1 {
@@ -101,6 +106,29 @@
       text-shadow: 0 0 15px var(--neon-primary);
       letter-spacing: 2px;
       font-weight: 800;
+    }
+
+    /* BOTÓN INSTALAR APP TIPO TINKERCAD */
+    .btn-install-app {
+      background: #39ff14 !important;
+      color: #0b0c10 !important;
+      border: 2px solid #39ff14 !important;
+      font-size: 1rem !important;
+      font-weight: 900 !important;
+      box-shadow: 0 0 15px rgba(57, 255, 20, 0.4);
+      animation: pulseGlow 2s infinite;
+    }
+
+    .btn-install-app:hover {
+      background: #0b0c10 !important;
+      color: #39ff14 !important;
+      box-shadow: 0 0 25px #39ff14;
+    }
+
+    @keyframes pulseGlow {
+      0% { box-shadow: 0 0 10px rgba(57, 255, 20, 0.4); }
+      50% { box-shadow: 0 0 25px rgba(57, 255, 20, 0.8); }
+      100% { box-shadow: 0 0 10px rgba(57, 255, 20, 0.4); }
     }
 
     .welcome-consoles {
@@ -431,6 +459,13 @@
     <div class="welcome-card">
       <h1>EMULADOR WEB</h1>
       
+      <!-- BOTÓN INSTALAR APLICACIÓN (Automático si el navegador lo soporta) -->
+      <button id="btn-install" class="console-btn btn-install-app hidden">
+        <div class="btn-content">
+          <span>📲 DESCARGAR APLICACIÓN</span>
+        </div>
+      </button>
+
       <div class="welcome-consoles">
         <!-- BOTÓN ACTIVO GBA -->
         <button id="btn-select-gba" class="console-btn active">
